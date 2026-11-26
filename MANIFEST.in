@@ -1,4 +1,4 @@
-include LICENSE THIRD_PARTY_NOTICES.md constraints-training.txt
+include LICENSE THIRD_PARTY_NOTICES.md constraints.txt
 graft configs
 graft docs
 graft results

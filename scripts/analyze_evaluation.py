@@ -9,7 +9,7 @@ from statistics import mean, stdev
 
 from scipy.stats import t
 
-from analyze_exp017 import write_csv
+from analyze_ablation import write_csv
 from netcc_rl.matrix import ALL_ARMS, MATRIX
 
 SEEDS = list(range(203000, 203100))

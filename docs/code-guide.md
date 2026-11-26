@@ -16,7 +16,7 @@
 | docs/ | 中文导航及详细复现协议 | 按需 |
 | results/README.md | 未来结果归档格式，当前不是实际结果 | 保存数据时 |
 | pyproject.toml | pip 安装、依赖、包资源和版本定义 | 通常不改 |
-| constraints-training.txt | 复现依赖版本约束 | 安装时 |
+| constraints.txt | 复现依赖版本约束 | 安装时 |
 | MANIFEST.in | 源码发行包应包含的配置、文档和脚本 | 打包时 |
 | .gitignore / .gitattributes | Git 忽略规则与文件属性 | 通常不改 |
 | LICENSE / THIRD_PARTY_NOTICES.md | 内部使用状态及第三方版权 | 保留 |
@@ -88,15 +88,15 @@ CMAT 子目录中的 task_adapter.py、task_joint.py、phase_features.py 等是�
 
 | 脚本 | 用途 |
 | --- | --- |
-| analyze_exp017.py | 消融评估曲线、AUC、Late 窗口和因子统计 |
-| summarize_independent_eval.py | 独立100回合评估统计 |
+| analyze_ablation.py | 消融评估曲线、AUC、Late 窗口和因子统计 |
+| analyze_evaluation.py | 独立100回合评估统计 |
 | tensorboard_export.py | 从 metrics.jsonl 导出 TensorBoard 事件 |
 | migrate_comparison_checkpoint.py | 将旧对比 checkpoint 迁移到新索引格式 |
-| normalize_comparison_run.py | 将旧 CMAT 运行输出转成统一结果格式 |
+| convert_run.py | 将旧 CMAT 运行输出转成统一结果格式 |
 | build_turbo.py / turbo-sm75.patch | 可选 Turbo-GNN 构建和兼容补丁，不是日常训练必需 |
 
 ## 7. 测试与后续研究
 
-test_exp017.py 检查消融配置、模型及环境/学习合同；test_comparison.py 检查对比接口；test_acceleration.py 检查加速路径。日常先跑 CPU pytest，再根据设备情况运行 GPU 专项。尚未完成的 GPU 验收不应被描述为已通过。
+test_ablation.py 检查消融配置、模型及环境/学习合同；test_comparison.py 检查对比接口；test_acceleration.py 检查加速路径。日常先跑 CPU pytest，再根据设备情况运行 GPU 专项。尚未完成的 GPU 验收不应被描述为已通过。
 
 结果默认写入 runs/，不要把 checkpoint、大日志和 TensorBoard 事件直接提交到 Git。使用新目录、记录 commit、config、seed 和环境协议。当前论文未发表；仓库供内部协作，不能视作已取得第三方公开再分发权或已采用开源许可证。
