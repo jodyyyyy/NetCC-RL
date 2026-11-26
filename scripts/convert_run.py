@@ -7,6 +7,7 @@ import shutil
 from pathlib import Path
 
 from netcc_rl.cli import read_config
+from netcc_rl.compat.comparison import cmat_config
 from netcc_rl.comparison_output import (
     append_json, checkpoint_index, evaluation, progress_record,
     runtime_record, sha256, training_row, write_json,
@@ -33,7 +34,7 @@ def main():
     normalized.update(schema_version=1, action_semantics=config["action_semantics"],
                       implementation={key:normalized.pop(key) for key in implementation},
                       snapshot_sha256=config["snapshot_sha256"])
-    if normalized != config:
+    if cmat_config(normalized) != config:
         raise ValueError("Run and target configuration differ")
     runtime = json.loads((args.run / "runtime.json").read_text())
     progress = json.loads((args.run / "progress.json").read_text())

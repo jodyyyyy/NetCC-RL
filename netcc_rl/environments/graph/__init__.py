@@ -1,6 +1,6 @@
 """Public graph-dynamics factories."""
 from .env import TASKS, GraphEnv, GraphDynamics
-from ..mpcsc.tdmpc2 import TDMPC2NumpyAdapter, TDMPC2TensorAdapter, _get, _set
+from netcc_rl.environments.mpcsc.adapter import NumpyEnvAdapter, TensorEnvAdapter, _get, _set
 
 
 def make_gym_env(task,*,seed=None,params=None):
@@ -14,7 +14,7 @@ def make_env(cfg):
         raise ValueError('MPCSC options conflict with graph task')
     raw=GraphEnv(_get(cfg,'task'),params=_get(cfg,'graph_params'),snapshot=_get(cfg,'graph_resolved'),seed=_get(cfg,'seed',0))
     _set(cfg,'graph_resolved',raw.snapshot())
-    env=TDMPC2TensorAdapter(TDMPC2NumpyAdapter(raw))
+    env=TensorEnvAdapter(NumpyEnvAdapter(raw))
     _set(cfg,'obs_shape',{'state':env.observation_space.shape})
     _set(cfg,'action_dim',env.action_space.shape[0])
     _set(cfg,'episode_length',env.max_episode_steps)

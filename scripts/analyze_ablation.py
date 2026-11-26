@@ -7,6 +7,7 @@ from itertools import product
 import json
 import math
 from pathlib import Path
+from netcc_rl.compat.ablation import normalize_record
 from statistics import mean, stdev
 
 from netcc_rl.matrix import ALL_ARMS, MATRIX
@@ -48,9 +49,9 @@ def analyze(path, environment, arm):
                   late5_sd=None, eval_auc_normalized=None)
     if not path.is_file():
         return result, [], []
-    rows = [json.loads(line) for line in path.read_text().splitlines()]
+    rows = [normalize_record(json.loads(line)) for line in path.read_text().splitlines()]
     evaluations = [row for row in rows if row["kind"] == "eval"]
-    if any((row["exp017_environment"], row["exp017_arm"], row["training_seed"]) != (environment, arm, 0)
+    if any((row["ablation_environment"], row["ablation_arm"], row["training_seed"]) != (environment, arm, 0)
            or row["eval_policy"] != "stochastic" or row["eval_seed"] != 202600
            or len(row["episodes"]) != 20 for row in evaluations):
         raise ValueError(f"Unexpected evaluation protocol in {path}")

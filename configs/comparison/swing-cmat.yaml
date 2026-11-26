@@ -48,7 +48,7 @@ profile:
   max_grad_norm: 10.0
 implementation:
   adapter_identity:
-    version: exp015_task_adapter_v1
+    version: continuous_task_adapter_v1
     task: swing
     snapshot_sha256: 52b63eeefa2a3fe814c4f1be49051dad9ccda1e816a8548f3c2dc5e58fa94244
     raw_shape:

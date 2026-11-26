@@ -7,7 +7,7 @@ from pathlib import Path
 
 from .cli import read_config
 from .matrix import ALL_ARMS, MATRIX, resolved
-from .algorithms.proposed.common.adaptive_architecture import digest
+from netcc_rl.algorithms.proposed.models.architecture import digest
 
 ALGORITHMS = ("ppo", "sac", "td3", "mappo", "happo", "mat", "jointppo", "cmat")
 
@@ -16,7 +16,7 @@ def entries(root, validate=False):
     root = Path(root)
     for env, arm in product(MATRIX["environments"], ALL_ARMS):
         path = root / "ablation" / env / f"{arm}.yaml"
-        if read_config(path) != {"exp017_environment": env, "exp017_arm": arm}:
+        if read_config(path) != {"ablation_environment": env, "ablation_arm": arm}:
             raise ValueError(f"Incorrect configuration identity in {path}")
         row = dict(config=str(path), environment=env, algorithm="proposed", identity=arm,
                    factors=ALL_ARMS[arm], protocol=f"comparison-{env}-v1")

@@ -20,12 +20,12 @@ def supported_task(task):
 
 
 def make_env(cfg):
-    from .mpcsc.tdmpc2 import _get
+    from netcc_rl.environments.mpcsc.adapter import _get
 
     task = str(_get(cfg, "task", ""))
     if not supported_task(task):
         raise ValueError("main registry supports only Kuramoto, SIS and Swing")
-    if _get(cfg, "collector_protocol") == "exp016_three_environments":
+    if _get(cfg, "collector_protocol") == "frozen_vector_v1":
         from .graph.frozen import for_config
 
         for_config(cfg)

@@ -1,8 +1,8 @@
 base_config_sha256:
-  kuramoto: 7f84c43348139228e305f894e6f29a903b45431f1c801cf6a2cc80dc615eb1eb
-  sis: bc74088e8c0d0d6bb335168446204aac34203acc69f38e8e9b51a3542da4a778
-  swing: 96d5d952fedb58022b67ab8cbca07c9acdca5fca469635eec3de6a4671977de3
-schema: exp017_factorial_v1
+  kuramoto: bec034cd38e103ba5dc49442b6c893233b94a9adbca46251ed936f8186d20552
+  sis: f641b7e73d457d899f550d8a96dd40c0209f65bdd39f73b5b6a6537852be5e05
+  swing: 3308eddd8de47d4b8a2f6e0f9ce9034ceed056fb9585d13425c2f9972f84cbdf
+schema: ablation_factorial_v2
 environments: [kuramoto, sis, swing]
 factors:
   G: {G0: matched_node_mlp, G1: gatv2_prior}

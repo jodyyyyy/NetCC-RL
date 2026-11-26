@@ -1,4 +1,4 @@
-"""Same-device numerical and checkpoint checks for EXP017 graph execution."""
+"""Same-device numerical and checkpoint checks for Ablation graph execution."""
 
 from copy import deepcopy
 import os
@@ -7,8 +7,8 @@ from pathlib import Path
 import pytest
 import torch
 from netcc_rl.environments import make_env
-from netcc_rl.algorithms.proposed import TDMPC2
-from netcc_rl.algorithms.proposed.common.buffer import Buffer
+from netcc_rl.algorithms.proposed import NetCCAgent
+from netcc_rl.algorithms.proposed.replay.buffer import Buffer
 from netcc_rl.algorithms.proposed.runner import record
 from netcc_rl.matrix import ALL_ARMS, MATRIX, resolved
 
@@ -29,11 +29,11 @@ def test_graph_update_matches_eager(name, arm, tmp_path):
         cfg.batch_size = 2
     cfg.steps = cfg.buffer_size = 10
     env = make_env(cfg)
-    eager = TDMPC2(cfg)
+    eager = NetCCAgent(cfg)
     accelerated_cfg = deepcopy(cfg)
     accelerated_cfg.learner_cuda_graphs = True
-    accelerated_cfg.compile = os.environ.get("EXP017_COMPILE_ACCEPTANCE") == "1"
-    accelerated = TDMPC2(accelerated_cfg)
+    accelerated_cfg.compile = os.environ.get("NETCC_RL_COMPILE_ACCEPTANCE") == "1"
+    accelerated = NetCCAgent(accelerated_cfg)
     accelerated.model.load_state_dict(eager.model.state_dict())
     obs = env.reset(seed=174)
     rows = [record(obs, action_dim=cfg.action_dim)]

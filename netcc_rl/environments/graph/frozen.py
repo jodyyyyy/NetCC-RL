@@ -34,7 +34,7 @@ def artifact(snapshot,*,required=False):
 
 def for_config(cfg):
     get=cfg.get if isinstance(cfg,dict) else lambda key:getattr(cfg,key,None)
-    required=get('collector_protocol')=='exp016_three_environments'
+    required=get('collector_protocol')=='frozen_vector_v1'
     snapshot=get('graph_resolved') or get('mpcsc_resolved')
     if not snapshot:
         if required:raise ValueError('formal collector protocol requires a nonempty frozen environment snapshot; preprocess explicitly')

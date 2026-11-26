@@ -1,4 +1,4 @@
-"""EXP-017 real Replay acceptance and factor contracts, on CPU and explicit CUDA."""
+"""ablation real Replay acceptance and factor contracts, on CPU and explicit CUDA."""
 
 from copy import deepcopy
 from pathlib import Path
@@ -11,16 +11,16 @@ import pytest
 import torch
 import yaml
 from netcc_rl.environments import make_env
-from netcc_rl.algorithms.proposed import TDMPC2
+from netcc_rl.algorithms.proposed import NetCCAgent
 from netcc_rl.algorithms.proposed.config import (
     load_config,
     actor_metadata,
     validate,
     validate_experiment_output,
 )
-from netcc_rl.algorithms.proposed.common.buffer import Buffer
-from netcc_rl.algorithms.proposed.common.adaptive_architecture import digest
-from netcc_rl.algorithms.proposed.common.node_features import node_features
+from netcc_rl.algorithms.proposed.replay.buffer import Buffer
+from netcc_rl.algorithms.proposed.models.architecture import digest
+from netcc_rl.algorithms.proposed.models.node_features import node_features
 from netcc_rl.algorithms.proposed.runner import record
 from netcc_rl.matrix import (
     ALL_ARMS,
@@ -58,7 +58,7 @@ def test_real_replay_all_arms(name, arm, device, tmp_path, monkeypatch):
     cfg.steps = cfg.buffer_size = 10
     cfg.batch_size = 2
     env = make_env(cfg)
-    agent = TDMPC2(cfg)
+    agent = NetCCAgent(cfg)
     model = agent.model
     obs = env.reset(seed=174)
     batch = obs.to(device).expand(2, -1)
@@ -103,7 +103,7 @@ def test_real_replay_all_arms(name, arm, device, tmp_path, monkeypatch):
     ref, refinfo = model._squashed_gaussian(mean, model.policy_log_std(raw), eps)
     torch.testing.assert_close(action, ref)
     torch.testing.assert_close(info["entropy"], refinfo["entropy"])
-    if cfg.exp017_factors["A"] == "A0":
+    if cfg.ablation_factors["A"] == "A0":
         assert seen[0].shape == (2, cfg.action_dim, f + 64)
         torch.testing.assert_close(
             seen[0][..., :f], local.index_select(-2, model._pi.driver_nodes)
@@ -206,7 +206,7 @@ def test_real_replay_all_arms(name, arm, device, tmp_path, monkeypatch):
     path = tmp_path / "weights.pt"
     agent.save(path)
     checkpoint = torch.load(path, map_location=device, weights_only=False)
-    assert checkpoint["metadata"]["exp017_factors"] == cfg.exp017_factors
+    assert checkpoint["metadata"]["ablation_factors"] == cfg.ablation_factors
     assert checkpoint["metadata"]["model_horizon"] == (
         3 if cfg.dynamics_type != "disabled" else None
     )
@@ -218,7 +218,7 @@ def test_real_replay_all_arms(name, arm, device, tmp_path, monkeypatch):
         if other == arm:
             continue
         bad = deepcopy(checkpoint)
-        bad["metadata"]["exp017_arm"] = other
+        bad["metadata"]["ablation_arm"] = other
         with pytest.raises(ValueError, match="identity differs"):
             agent.load(bad)
     bad = deepcopy(checkpoint)
@@ -228,7 +228,7 @@ def test_real_replay_all_arms(name, arm, device, tmp_path, monkeypatch):
     with pytest.raises(ValueError, match="state_encoder_type identity differs"):
         agent.load(bad)
     bad = deepcopy(checkpoint)
-    bad["config"]["exp017_factors"]["G"] = "invalid"
+    bad["config"]["ablation_factors"]["G"] = "invalid"
     with pytest.raises(ValueError):
         agent.load(bad)
     saved_config = tmp_path / "config.yaml"
@@ -237,7 +237,7 @@ def test_real_replay_all_arms(name, arm, device, tmp_path, monkeypatch):
     make_env(restored).close()
     assert digest(restored.architecture_resolved) == digest(cfg.architecture_resolved)
     env.close()
-    evidence = os.environ.get("NETCC_RL_EXP017_EVIDENCE")
+    evidence = os.environ.get("NETCC_RL_Ablation_EVIDENCE")
     if evidence:
         dest = Path(evidence)
         dest.mkdir(parents=True, exist_ok=True)
@@ -245,7 +245,7 @@ def test_real_replay_all_arms(name, arm, device, tmp_path, monkeypatch):
             environment=name,
             arm=arm,
             device=device,
-            factors=cfg.exp017_factors,
+            factors=cfg.ablation_factors,
             architecture=cfg.architecture_resolved,
             metadata=actor_metadata(cfg),
             h_encoder_parameters=hcount,
@@ -267,8 +267,8 @@ def test_real_replay_all_arms(name, arm, device, tmp_path, monkeypatch):
 
 @pytest.mark.parametrize("name", MATRIX["environments"])
 def test_g0_no_adjacency_or_cross_node_dependency(name, monkeypatch):
-    from netcc_rl.algorithms.proposed.common.exp017 import MatchedNodeMLP
-    from netcc_rl.algorithms.proposed.common import node_features as nf
+    from netcc_rl.algorithms.proposed.ablation.variants import MatchedNodeMLP
+    from netcc_rl.algorithms.proposed.models import node_features as nf
 
     cfg = resolved(name, "E1")
 
@@ -313,7 +313,7 @@ def test_g0_no_adjacency_or_cross_node_dependency(name, monkeypatch):
 @pytest.mark.parametrize("name", MATRIX["environments"])
 @pytest.mark.parametrize("arm", ["E2", "E4", "E6", "E7", *MATRIX["global_mlp_arms"]])
 def test_actual_next_observation_and_bellman_mask(name, arm, monkeypatch):
-    agent = TDMPC2(resolved(name, arm))
+    agent = NetCCAgent(resolved(name, arm))
     cfg = agent.cfg
     obs = torch.randn(cfg.horizon + 1, 2, cfg.obs_shape["state"][0])
     a = torch.zeros(cfg.horizon, 2, cfg.action_dim)
@@ -355,9 +355,9 @@ def test_e0_exact_main_modules_initialization_and_update(name):
         c.batch_size = 2
         c.graph_checkpoint = False
     torch.manual_seed(174)
-    baseline = TDMPC2(main)
+    baseline = NetCCAgent(main)
     torch.manual_seed(174)
-    experiment = TDMPC2(cfg)
+    experiment = NetCCAgent(cfg)
     for key, value in baseline.model.state_dict().items():
         if torch.is_tensor(value):
             torch.testing.assert_close(
@@ -382,7 +382,7 @@ def test_evaluation_cli_mlp_arms(name, arm, tmp_path):
     cfg = resolved(name, arm)
     cfg.eval_episodes = 1
     cfg.eval_policy = "gaussian_mean"
-    agent = TDMPC2(cfg)
+    agent = NetCCAgent(cfg)
     agent.save(tmp_path / "weights.pt")
     (tmp_path / "config.yaml").write_text(yaml.safe_dump(vars(cfg)))
     output = tmp_path / "evaluation.json"
@@ -404,7 +404,7 @@ def test_evaluation_cli_mlp_arms(name, arm, tmp_path):
     data = json.loads(output.read_text())
     assert np.isfinite(data["episode_return"]) and len(data["episodes"]) == 1
     assert data["checkpoint_load"]["policy_restored"]
-    assert data["exp017_arm"] == arm
+    assert data["ablation_arm"] == arm
     if arm != "E7":
         return
     # Exercise the public training entrypoint for one interaction, with no learner campaign.
@@ -427,7 +427,7 @@ def test_evaluation_cli_mlp_arms(name, arm, tmp_path):
     )
     assert result.returncode == 0, result.stderr
     manifest = json.loads((work_dir / "run-manifest.json").read_text())
-    assert manifest["exp017_arm"] == "E7" and manifest["dynamics_enabled"] is False
+    assert manifest["ablation_arm"] == "E7" and manifest["dynamics_enabled"] is False
     assert (work_dir / "final.pt").is_file()
 
 
@@ -454,7 +454,7 @@ def test_matrix_full_factorial_identities_and_production_isolation():
             identities.add(digest(cfg.architecture_resolved))
             cfg.work_dir = str(ROOT.parent / "test-runs" / name / arm)
             validate_experiment_output(cfg)
-            cfg.work_dir = "/tmp/artifacts/EXP-016/wrong"
+            cfg.work_dir = None
             with pytest.raises(ValueError):
                 validate_experiment_output(cfg)
     assert len(identities) == 36
@@ -467,7 +467,7 @@ def test_matrix_full_factorial_identities_and_production_isolation():
         with pytest.raises(ValueError):
             load_config(overrides=[override])
     cfg = resolved("sis", "E7")
-    cfg.exp017_factors["D"] = "D1"
+    cfg.ablation_factors["D"] = "D1"
     with pytest.raises(ValueError):
         validate(cfg)
 
@@ -481,8 +481,8 @@ def test_frozen_base_hash_and_same_shape_environment_checkpoint_rejection(monkey
         with pytest.raises(ValueError, match="base config changed"):
             resolved("sis", "E0")
     matrix._base.cache_clear()
-    sis = TDMPC2(resolved("sis", "E0"))
-    kuramoto = TDMPC2(resolved("kuramoto", "E0"))
+    sis = NetCCAgent(resolved("sis", "E0"))
+    kuramoto = NetCCAgent(resolved("kuramoto", "E0"))
     # Same N/Z/action/Q dimensions must not bypass the environment identity.
     checkpoint = dict(
         metadata=actor_metadata(sis.cfg),
@@ -496,9 +496,9 @@ def test_frozen_base_hash_and_same_shape_environment_checkpoint_rejection(monkey
 @pytest.mark.parametrize("name", MATRIX["environments"])
 def test_global_mlp_native_input_and_topology_independence(name, monkeypatch):
     from torch import nn
-    from netcc_rl.algorithms.proposed.common.exp017 import GlobalMLPEncoder
-    from netcc_rl.algorithms.proposed.common.layers import NormedLinear, SimNorm
-    from netcc_rl.algorithms.proposed.common import node_features as nf
+    from netcc_rl.algorithms.proposed.ablation.variants import GlobalMLPEncoder
+    from netcc_rl.algorithms.proposed.models.layers import NormedLinear, SimNorm
+    from netcc_rl.algorithms.proposed.models import node_features as nf
 
     cfg = resolved(name, "E8")
 
@@ -548,8 +548,8 @@ def test_global_mlp_config_matches_control(name, arm):
     cfg = resolved(name, arm, "cuda:0")
     control = resolved(name, MATRIX["global_mlp_controls"][arm], "cuda:0")
     expected_differences = {
-        "exp017_arm",
-        "exp017_factors",
+        "ablation_arm",
+        "ablation_factors",
         "state_encoder_type",
         "architecture_resolved",
     }

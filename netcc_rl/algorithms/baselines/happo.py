@@ -1,4 +1,4 @@
-"""MARLlib-derived HAPPO, common profile; bounded CPU runner in fidelity_run.
+"""MARLlib-derived HAPPO, common profile; bounded CPU runner in run.
 
 Copyright (c) 2023 Replicable-MARL. MIT: licenses/MARLlib-HAPPO.txt.
 Adapted: clipped surrogate/entropy/KL, shuffled all-policy sweeps, detached
@@ -13,8 +13,8 @@ from torch.distributions import Normal,kl_divergence
 from .batched import independent_actor_parameters,normal_sample
 from .profiling import profiled
 from .phase_features import phase_features, FEATURE_MULTIPLIER
-from .fidelity_config import load_profile
-from .fidelity_networks import ContinuousActor,network,gradient_step
+from netcc_rl.algorithms.baselines.baseline_config import load_profile
+from netcc_rl.algorithms.baselines.baseline_networks import ContinuousActor,network,gradient_step
 from .neighborhoods import Neighborhoods,physical_graph
 # Historical helper stays importable for the original tests, never used by v2.
 

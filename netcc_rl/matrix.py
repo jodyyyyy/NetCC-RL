@@ -1,4 +1,4 @@
-"""Resolve EXP-017 configurations and enumerate commands without starting training."""
+"""Resolve ablation configurations and enumerate commands without starting training."""
 
 import argparse
 from copy import deepcopy
@@ -7,7 +7,7 @@ from pathlib import Path
 import json
 import shlex
 import yaml
-from netcc_rl.algorithms.proposed.common.adaptive_architecture import digest
+from netcc_rl.algorithms.proposed.models.architecture import digest
 
 ROOT = Path(__file__).resolve().parent
 MATRIX = yaml.safe_load((ROOT / "ablation.yaml").read_text())
@@ -18,28 +18,28 @@ ENCODERS = {**MATRIX["factors"]["G"], **MATRIX["global_mlp_encoders"]}
 @lru_cache(None)
 def _base(name):
     value = yaml.safe_load(
-        (ROOT / "algorithms/proposed/configs/exp016" / f"{name}.yaml").read_text()
+        (ROOT / "algorithms/proposed/configs/defaults" / f"{name}.yaml").read_text()
     )
     if digest(value) != MATRIX["base_config_sha256"][name]:
         raise ValueError(
-            "EXP-017 base config changed from frozen main; explicit migration required"
+            "ablation base config changed from frozen main; explicit migration required"
         )
     return value
 
 
 def expand(spec):
-    if set(spec) != {"exp017_environment", "exp017_arm"}:
-        raise ValueError("EXP-017 config must select exactly environment and arm")
-    name, arm = spec["exp017_environment"], spec["exp017_arm"]
+    if set(spec) != {"ablation_environment", "ablation_arm"}:
+        raise ValueError("ablation config must select exactly environment and arm")
+    name, arm = spec["ablation_environment"], spec["ablation_arm"]
     if name not in MATRIX["environments"] or arm not in ALL_ARMS:
-        raise ValueError("unknown EXP-017 environment/arm")
+        raise ValueError("unknown ablation environment/arm")
     factors = ALL_ARMS[arm]
     base = deepcopy(_base(name))
     base.update(
-        exp017_environment=name,
-        exp017_arm=arm,
-        exp017_factors=deepcopy(factors),
-        exp017_base_sha256=digest(base),
+        ablation_environment=name,
+        ablation_arm=arm,
+        ablation_factors=deepcopy(factors),
+        base_config_sha256=digest(base),
         graph_backend="pyg",
         graph_checkpoint=False,
         learner_cuda_graphs=True,
@@ -67,7 +67,7 @@ def expand(spec):
 
 def expected(cfg):
     return expand(
-        dict(exp017_environment=cfg.exp017_environment, exp017_arm=cfg.exp017_arm)
+        dict(ablation_environment=cfg.ablation_environment, ablation_arm=cfg.ablation_arm)
     )
 
 
@@ -75,8 +75,8 @@ def validate(cfg):
     base = expected(cfg)
     # Preserve matched losses/physics/architecture. Runtime controls can be overridden.
     fixed = (
-        "exp017_factors",
-        "exp017_base_sha256",
+        "ablation_factors",
+        "base_config_sha256",
         "actor_architecture",
         "state_encoder_type",
         "dynamics_type",
@@ -103,18 +103,18 @@ def validate(cfg):
         "graph_resolved",
         "episodic",
     )
-    if cfg.exp017_arm in MATRIX["global_mlp_arms"]:
+    if cfg.ablation_arm in MATRIX["global_mlp_arms"]:
         fixed += ("simnorm_dim",)
     for k in fixed:
         if getattr(cfg, k, None) != base.get(k):
-            raise ValueError(f"EXP-017 {k} differs from frozen matrix")
+            raise ValueError(f"ablation {k} differs from frozen matrix")
     if cfg.graph_backend != "pyg":
-        raise ValueError("EXP-017 preserves the PyG encoder backend")
+        raise ValueError("ablation preserves the PyG encoder backend")
     if cfg.collector_backend != "cpu_serial":
-        raise ValueError("EXP-017 uses the normal serial real-transition runner")
+        raise ValueError("ablation uses the normal serial real-transition runner")
     # Canonical environment task can be normalized by make_env; snapshot is fixed above.
     if cfg.task != base["task"]:
-        raise ValueError("EXP-017 task differs from frozen matrix")
+        raise ValueError("ablation task differs from frozen matrix")
 
 
 def resolved(name, arm, device="cpu"):
@@ -132,13 +132,13 @@ def resolved(name, arm, device="cpu"):
 
 def encoder_parameter_comparison(cfg):
     """Measure both complete encoders and total model counts on CPU."""
-    from netcc_rl.algorithms.proposed.common.adaptive_world_model import AdaptiveWorldModel
+    from netcc_rl.algorithms.proposed.models.network_world_model import NetworkWorldModel
 
-    name, arm = cfg.exp017_environment, cfg.exp017_arm
+    name, arm = cfg.ablation_environment, cfg.ablation_arm
     control_arm = MATRIX["global_mlp_controls"][arm]
     control_cfg = resolved(name, control_arm)
-    control = AdaptiveWorldModel(control_cfg)
-    model = AdaptiveWorldModel(cfg)
+    control = NetworkWorldModel(control_cfg)
+    model = NetworkWorldModel(cfg)
     target, actual = (
         sum(p.numel() for p in m._encoder.parameters() if p.requires_grad)
         for m in (control, model)
@@ -202,7 +202,7 @@ def main():
             row = dict(
                 environment=name,
                 arm=arm,
-                factors=cfg.exp017_factors,
+                factors=cfg.ablation_factors,
                 identity_sha256=digest(cfg.architecture_resolved),
                 config_sha256=digest(vars(cfg)),
             )

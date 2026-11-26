@@ -1,0 +1,12 @@
+"""Canonical identity digest for serializable configuration values."""
+
+import hashlib
+import json
+
+
+def digest(value):
+    return hashlib.sha256(
+        json.dumps(
+            value, sort_keys=True, separators=(",", ":"), allow_nan=False
+        ).encode()
+    ).hexdigest()

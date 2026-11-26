@@ -12,10 +12,10 @@ import yaml
 
 from netcc_rl.environments import make_env
 
-from .common.buffer import Buffer
-from .common.math import affine_action
-from .common.writer import JsonlWriter
-from .common.timing import TrainingTimer, runtime_metadata
+from netcc_rl.algorithms.proposed.replay.buffer import Buffer
+from netcc_rl.algorithms.proposed.utils.math import affine_action
+from netcc_rl.algorithms.proposed.utils.writer import JsonlWriter
+from netcc_rl.algorithms.proposed.utils.timing import TrainingTimer, runtime_metadata
 from .config import actor_metadata, experiment_name, validate_experiment_output
 
 
@@ -183,7 +183,7 @@ def _train(agent, env, cfg, *, load_report=None, writer=None):
         work_dir / "runtime.json",
         {**runtime_metadata(cfg.device), **actor_metadata(cfg)},
     )
-    if getattr(cfg, "exp016_arm", None):
+    if getattr(cfg, "graph_readout_variant", None):
         write_json(
             work_dir / "run-manifest.json",
             {
@@ -202,7 +202,7 @@ def _train(agent, env, cfg, *, load_report=None, writer=None):
     timer = TrainingTimer(cfg, work_dir / "timing.jsonl", writer=writer)
     pretraining_done, update_count, episode_idx = False, 0, 0
     latest, action_metrics = {}, []
-    from .common.utd import UpdateBudget
+    from netcc_rl.algorithms.proposed.utils.utd import UpdateBudget
 
     budget = (
         UpdateBudget(cfg.utd_ratio)
@@ -361,7 +361,7 @@ def train(agent, env, cfg, *, load_report=None):
     try:
         with writer:
             if getattr(cfg, "collector_backend", "cpu_serial") == "gpu":
-                from .common.vector_runner import train_vector
+                from netcc_rl.algorithms.proposed.replay.vector_runner import train_vector
 
                 result = train_vector(
                     agent, cfg, load_report=load_report, writer=writer

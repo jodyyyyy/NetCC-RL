@@ -5,6 +5,7 @@ import hashlib
 import json
 import math
 from pathlib import Path
+from netcc_rl.compat.ablation import normalize_record
 from statistics import mean, stdev
 
 from scipy.stats import t
@@ -39,11 +40,11 @@ def main():
             row = dict(run=run, environment=environment, arm=arm, training_seed=0, status="pending",
                        evaluation_episodes=0, mean=None, sample_sd=None, ci95_low=None, ci95_high=None)
             if path.is_file():
-                result = json.loads(path.read_text())
+                result = normalize_record(json.loads(path.read_text()))
                 ep = result["episodes"]
                 load = result["checkpoint_load"]
                 if ([p["seed"] for p in ep] != SEEDS or result["eval_policy"] != "stochastic"
-                        or (result["exp017_environment"], result["exp017_arm"], result["training_seed"]) != (environment, arm, 0)
+                        or (result["ablation_environment"], result["ablation_arm"], result["training_seed"]) != (environment, arm, 0)
                         or not all(load[key] for key in ("policy_restored", "world_model_restored", "critic_restored", "value_support_verified"))
                         or not all(math.isfinite(p["return"]) and p["length"] == 150 and not p["terminated"] for p in ep)):
                     raise ValueError(f"Evaluation protocol differs for {run}")
@@ -61,7 +62,7 @@ def main():
                     raise ValueError(f"Checkpoint hash differs for {run}")
                 checks[run] = dict(checkpoint_sha256=checkpoint_hash,
                                    config_sha256=result["config_sha256"], evaluation_sha256=digest(path),
-                                   architecture_sha256=result["exp017_identity_sha256"])
+                                   architecture_sha256=result["ablation_identity_sha256"])
             summary.append(row)
     args.output.mkdir(parents=True, exist_ok=False)
     write_csv(args.output / "results.csv", summary)

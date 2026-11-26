@@ -7,7 +7,7 @@ from .environment import CASE,CFG,SNAPSHOT,DRIVERS,RAW_DIM,NODE_COUNT,make_env,L
 from .phase_features import phase_features,FEATURE_MULTIPLIER
 from .runtime import rng, restore_rng, seed_everything
 from netcc_rl.comparison_output import append_json, checkpoint_index, evaluation as evaluate_rows, progress_record, runtime_record, training_row, write_json
-from netcc_rl.algorithms.proposed.common.adaptive_architecture import digest
+from netcc_rl.algorithms.proposed.models.architecture import digest
 
 def validate_runner(runner, config):
     if CASE != config["environment"] or list(DRIVERS) != config["drivers"] or digest(SNAPSHOT) != config["snapshot_sha256"]:
@@ -23,7 +23,9 @@ def load_runner(config, checkpoint, device, seed):
     try:
         validate_runner(runner, config)
         if runner.algorithm in ("ppo", "sac", "td3"):
-            runner.agent = type(runner.agent).load(checkpoint, device=device)
+            from netcc_rl.compat.sb3 import load_agent
+
+            runner.agent = load_agent(type(runner.agent), checkpoint, device, config["profile"]["net_arch"])
         else:
             state = torch.load(checkpoint, map_location=device, weights_only=False)
             if (state["algorithm"], state["case"]) != (runner.algorithm, CASE):
@@ -52,16 +54,16 @@ class Runner:
             self.predict=self.agent.policy.predict
         elif algorithm=='happo':
             from .happo import HAPPO
-            from .fidelity_config import load_profile
+            from netcc_rl.algorithms.baselines.baseline_config import load_profile
             adjacency=SNAPSHOT.get('adjacency') or SNAPSHOT['fixed_actuators']['physical_system']['adjacency']
             self.agent=HAPPO(load_profile('happo'),self.device,adjacency,DRIVERS);self.profile=self.agent.config
             self.predict=self.agent.predict
         elif algorithm=='mappo':
-            from .onpolicy import build
+            from netcc_rl.algorithms.baselines.mappo import build
             self.args,self.graph,self.policies,self.trainers,self.buffers=build(algorithm,self.device,formal=True)
             self.profile=vars(self.args);self.predict=lambda o:self.map_action(o,True)[1][:,0,0]
         else:
-            from .sb3_settings import build
+            from netcc_rl.algorithms.baselines.sb3_config import build
             self.agent=build(algorithm,self.env,self.seed,self.device)
             self.profile=json.loads((Path(__file__).with_name('configs')/'formal-hyperparameters-v1.json').read_text())['algorithms'][algorithm]
             self.predict=lambda o:self.agent.predict(o,deterministic=True)[0]
@@ -123,7 +125,7 @@ class Runner:
                 if term:tail*=0
                 if t+1!=limit:raise AssertionError('unexpected early boundary requires resized MAPPO buffer')
                 b.compute_returns(tail,tr.value_normalizer);tr.prep_training()
-            from .onpolicy_fast import train_independent
+            from netcc_rl.algorithms.baselines.mappo_batched import train_independent
             stats=train_independent(self.trainers,self.buffers)
             metrics={k:float(np.mean([s[k] for s in stats])) for k in stats[0]}
         modules=[self.agent.policy] if self.algorithm in ('mat','jointppo') else ([self.agent] if self.algorithm=='happo' else [m for p in self.policies for m in (p.actor,p.critic)])

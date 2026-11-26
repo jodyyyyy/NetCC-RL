@@ -7,9 +7,9 @@ from types import SimpleNamespace
 
 import torch
 import netcc_rl
-from netcc_rl.algorithms.proposed.common.adaptive_architecture import digest as snapshot_digest
-from netcc_rl.algorithms.proposed.common.math import affine_action, squashed_gaussian_density
-from netcc_rl.algorithms.proposed.common.node_features import node_features
+from netcc_rl.algorithms.proposed.models.architecture import digest as snapshot_digest
+from netcc_rl.algorithms.proposed.utils.math import affine_action, squashed_gaussian_density
+from netcc_rl.algorithms.proposed.models.node_features import node_features
 from netcc_rl.environments.graph.env import GraphEnv
 from netcc_rl.algorithms.baselines.environment_profile import resolved
 from netcc_rl.environments.mpcsc.config import from_snapshot
@@ -25,6 +25,8 @@ class TaskAdapter:
             assets = Path(netcc_rl.__file__).resolve().parent / "environments/graph/data/cmat"
             self.snapshot = json.loads((assets / f"{self.name}.json").read_text())
         identity = config["implementation"]["adapter_identity"]
+        if identity.get("version") != "continuous_task_adapter_v1":
+            raise ValueError("Unsupported CMAT task adapter identity")
         digest = hashlib.sha256(json.dumps(self.snapshot, sort_keys=True).encode()).hexdigest()
         if digest != identity["snapshot_sha256"] or snapshot_digest(self.snapshot) != config["snapshot_sha256"]:
             raise ValueError("CMAT snapshot differs from the frozen profile")

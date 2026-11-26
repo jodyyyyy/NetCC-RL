@@ -78,13 +78,13 @@ GATv2 使用 Mean+Max readout；Node-wise MLP 匹配节点编码器参数量，�
 
 ## 4. 开发与测试
 
-先看 `configs/`、`netcc_rl/train.py` 和 [文件指南](docs/code-guide.md)，不需要一开始阅读所有底层代码。改算法后至少执行：
+配置和运行入口在 `configs/` 与 `netcc_rl/train.py`。主 Agent 位于 `netcc_rl/algorithms/proposed/agent.py`，模型、更新、回放和工具按职责分包。算法改动后请运行 CPU 测试。
 
 ```bash
 CUDA_VISIBLE_DEVICES="" OMP_NUM_THREADS=1 python -m pytest -q
 ```
 
-GPU 加速及跨运行时恢复的完整验收尚未完成。正式配置和已运行实验身份保持冻结；新的研究变体建议新增配置/分支，不直接覆盖历史协议。
+正式消融配置使用 PyG GATv2、TorchInductor 和 CUDA Graph。历史 proposed 权重由兼容层校验原配置与模型身份后加载。旧对比权重可通过迁移命令生成统一的 checkpoint 索引。请将每次新训练写入独立目录。迁移命令和历史身份的映射见 [中文代码指南](docs/code-guide.md)。
 
 ## 5. 数据与引用
 
