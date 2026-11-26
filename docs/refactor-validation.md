@@ -58,4 +58,21 @@ python -m build
 - 36 组消融的短程对照全部通过。两次更新的动作、损失、梯度、Adam 状态、模型及目标网络权重摘要逐位一致。8 种基线每种抽查一个环境，算法更新的固定输入摘要一致。另执行了 24 组对比的正式最小更新短测及 checkpoint 重载评估。
 - 历史权重通过严格加载和单回合评估，共 24 组原消融、5 组已有权重的 Global MLP-512 消融和 24 组对比。其余 7 组 Global MLP-512 在检查时尚无最终权重。负例覆盖错误 arm、同形状的另一环境、旧基础配置摘要、非 512 Global MLP、错误 SB3 运行 manifest 及错误 SIS 协议。还验证了旧 NetCC-RL PPO 归档和初版 CMAT 输出转换。
 - Pytest 全集按测试节点分六批运行，106 通过，72 个 GPU 用例跳过。独立 CPU 环境分别安装 wheel 和 sdist，均通过依赖检查与仓库外配置枚举。wheel 完成 SIS E9 短测和评估，sdist 完成 SIS CMAT 短测和评估。旧消融分析与独立评估汇总可读取历史行。原基准本身有一条测试仍期待禁止使用旧目录名。候选改为测试实际合同，即训练需要显式输出目录。
-- GPU 检查时八张卡均已有进程，候选 CUDA 路径此次未执行。没有为本次回归启动正式训练。
+- 初次验收时八张 GPU 均已有训练进程。之后获准共享物理 GPU 7 做短程 CUDA 补验。两轮验收均未启动正式训练。
+
+## 短程 CUDA 补验
+
+同一张物理卡上分别运行 `d45e6352` 与候选代码。每组使用 B512、同一组真实回放起点和固定随机种子，各执行四次 learner 更新。两版均通过原有的 eager 对照容差后，再配对比较加速路径的动作、Q、损失、梯度范数、模型和目标网络权重及 Adam 状态。测试保留 CUDA Graph 捕获和缓存复用断言。
+
+```bash
+CUDA_VISIBLE_DEVICES=GPU_UUID CUBLAS_WORKSPACE_CONFIG=:4096:8 PYTHONHASHSEED=0 \\
+NETCC_RL_CUDA_ACCEPTANCE=1 NETCC_RL_COMPILE_ACCEPTANCE=1 NETCC_RL_FULL_BATCH_ACCEPTANCE=1 \\
+OMP_NUM_THREADS=1 python -m pytest -q tests/test_acceleration.py \\
+  -k 'E0-swing or E9-sis or E10-kuramoto'
+```
+
+2026-11-26 在物理 GPU 7 上使用 PyTorch 2.4.0 和 CUDA 12.1。基准与候选各通过三组 B512 测试，24 次 learner 更新均完成。三组都捕获并复用了 CUDA Graph。
+
+- SIS E9 与 Kuramoto E10 的记录张量前后完全一致。
+- Swing E0 的最大绝对差分别为动作 `1.82e-6`、Q `5.96e-8`、损失或梯度范数 `1.48e-5`、模型含目标网络权重 `5.95e-7`、Adam 状态 `5.12e-8`，均在原容差内。
+- 共享卡监测到短时热限频，最高采样温度 87°C。现有训练进程保持运行。本次仅记录数值与加速路径正确性。

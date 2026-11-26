@@ -25,7 +25,9 @@ def test_graph_update_matches_eager(name, arm, tmp_path):
     cfg = resolved(name, arm, "cuda:0")
     cfg.compile = False
     cfg.learner_cuda_graphs = False
-    if arm in MATRIX["arms"]:
+    if os.environ.get("NETCC_RL_FULL_BATCH_ACCEPTANCE") == "1":
+        assert cfg.batch_size == 512
+    elif arm in MATRIX["arms"]:
         cfg.batch_size = 2
     cfg.steps = cfg.buffer_size = 10
     env = make_env(cfg)
