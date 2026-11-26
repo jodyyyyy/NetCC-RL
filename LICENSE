@@ -1,5 +1,8 @@
-NetCC-RL v0.1.0 private review candidate
+NetCC-RL — private research and collaboration repository
 
-The project license is pending approval by the rights holders. This file
-grants no license over project-owned material. Third-party components remain
-subject to their own terms. See THIRD_PARTY_NOTICES.md.
+The project is maintained for internal research and authorized collaboration.
+No public open-source license has been granted for project-owned material.
+Access to this private repository does not itself grant public redistribution rights.
+Third-party components remain subject to their own licenses and terms;
+see THIRD_PARTY_NOTICES.md. Unresolved redistribution permissions must be
+cleared before any public release. No unpublished paper metadata is asserted.

@@ -1,10 +1,17 @@
-# NetCC-RL
+# NetCC-RL: Reinforcement Learning for Continuous Control of Complex Networks
 
-NetCC-RL is a Python library for reinforcement learning on continuous-control tasks in complex networks. It includes three frozen environments, a graph-based continuous actor–critic, and eight RL/MARL comparisons.
+面向复杂网络连续控制的强化学习研究代码。当前用于课题组内部研究、算法复现和后续开发；论文及完整实验数据尚未发布。请保持仓库私有，未经权利人确认不要公开或转发第三方源码及拓扑数据。
 
-## Install
+## 快速导航
 
-Use Python 3.10 and a virtual environment. The reproduction profiles were exercised with PyTorch 2.4.0. Install the CPU wheel first if running on CPU. For CUDA, use the corresponding PyTorch 2.4 wheel for your driver and runtime.
+- [中文代码与文件指南](docs/code-guide.md)：每类文件的用途、修改算法和实验的入口。
+- [详细复现协议（英文）](docs/reproduction.md)：训练预算、算法更新频率、评估和 checkpoint 兼容。
+- [实验结果说明](results/README.md)：如何保存、分析和补充训练数据。
+- [第三方来源及版权](THIRD_PARTY_NOTICES.md)：必须保留的来源与许可说明。
+
+## 1. 安装（Linux，Python 3.10）
+
+推荐独立环境。已验证的训练版本为 PyTorch 2.4.0；以下是 CPU 安装例子。GPU 用户先安装与驱动兼容的 PyTorch 2.4 CUDA wheel，再执行最后一行。
 
 ```bash
 python -m venv .venv
@@ -13,44 +20,75 @@ python -m pip install --index-url https://download.pytorch.org/whl/cpu --extra-i
 python -m pip install -c constraints-training.txt '.[baselines,analysis,test]'
 ```
 
-The base install covers the proposed learner and CMAT. The `baselines` extra installs SB3 for PPO, SAC and TD3. The `analysis` extra installs plotting and TensorBoard tools. The `test` extra installs pytest. Run these examples from the source directory containing `configs/`. Installed modules can run from any directory when you pass the paths to the configs and outputs.
+`baselines` 安装 SB3（PPO/SAC/TD3）；`analysis` 安装绘图和 TensorBoard；`test` 安装 pytest。其余算法的必要依赖在基础包中。以下命令从仓库根目录执行。
 
-## Train and evaluate
+## 2. 第一次运行：先短测，再正式训练
 
 ```bash
 python -m netcc_rl.catalog --validate
 python -m netcc_rl.train --config configs/ablation/sis/E0.yaml --smoke --output runs/sis-e0-smoke
 python -m netcc_rl.evaluate --config configs/ablation/sis/E0.yaml --checkpoint runs/sis-e0-smoke/final.pt --episodes 1
-python -m netcc_rl.train --config configs/comparison/sis-cmat.yaml --smoke --output runs/sis-cmat-smoke
-python -m netcc_rl.evaluate --config configs/comparison/sis-cmat.yaml --checkpoint runs/sis-cmat-smoke/checkpoint.json --episodes 1
 ```
 
-The same train and evaluation commands accept every profile in `configs/comparison/`. Select `kuramoto`, `sis` or `swing` and one of `ppo`, `sac`, `td3`, `mappo`, `happo`, `mat`, `jointppo` or `cmat`. All comparison runs write the same filenames and result schema. `checkpoint.json` resolves each algorithm's native weight format. Use `--seed` for training and `--eval-seed` for evaluation. Training requires a fresh output path.
+对比算法示例：
 
-The smoke mode performs real environment steps and learner updates with a reduced budget. The formal profiles specify 1,000,000 real environment transitions and training seed 0. Use `--device cuda:0` to select visible CUDA device 0. The proposed formal profiles use PyTorch compilation and CUDA Graphs. To request eager execution explicitly, pass `--eager --device cpu` or `--eager --device cuda:0`.
+```bash
+python -m netcc_rl.train --config configs/comparison/sis-ppo.yaml --smoke --output runs/sis-ppo-smoke
+python -m netcc_rl.evaluate --config configs/comparison/sis-ppo.yaml --checkpoint runs/sis-ppo-smoke/checkpoint.json --episodes 1
+```
 
-## Environments and protocols
+正式训练示例（需要可用 GPU，1M 真实环境步，不是短测）：
 
-- **Kuramoto** uses 100 coupled oscillators and 50 fixed actuators. Policies that encode phases use node-major sine and cosine features.
-- **SIS** uses 100 nodes and 50 fixed actuators. In the common protocol, action `a` in `[-1,1]` maps to control intensity `(a+1)/2`. The reward subtracts 0.1 times mean control intensity from the infection reward. This makes `-1` the no-intervention action.
-- **Swing** uses the 38-node core extracted from the IEEE 39-bus topology and 19 fixed actuators. The simulator uses its frozen Swing dynamics and actuator model.
+```bash
+python -m netcc_rl.train --config configs/ablation/sis/E8.yaml --device cuda:0 --seed 0 --output runs/sis-E8-seed0
+```
 
-`configs/comparison/sis-cmat.yaml` uses the common SIS protocol. The historical CMAT SIS experiment used zero control cost and bounded actions to `[-1,0.2]`. Its config is under `configs/historical/` and its returns belong to that protocol. CMAT uses 50 deterministic latent-consensus iterations, a B32 collector and episode-major Adam updates. Evaluation uses deterministic actions for all comparisons. The proposed evaluation profile uses seeded stochastic actions.
+每次训练使用新输出目录。消融正式配置默认启用 compile + CUDA Graph；要显式使用 eager，指定 `--eager --device cpu` 或 `--eager --device cuda:0`。短测自动使用缩小预算，不能当正式结果。对比算法使用自己的更新机制；统一入口不等于统一 learner。详细参数见 `--help`。
 
-## Ablations
+## 3. 实验内容
 
-The 36 ablations cross 12 settings with all three environments. E0 is the proposed profile and appears once per environment.
+| 环境 | 节点 | 固定执行器 |
+| --- | ---: | ---: |
+| Kuramoto | 100 | 50 |
+| SIS | 100 | 50 |
+| Swing (IEEE39-derived core38) | 38 | 19 |
 
-- **G0** matches the node embedding parameter count of **G1**, the two-layer four-head GATv2 encoder with Mean+Max global readout.
-- **G2** flattens native node features and uses a hidden width of 512 and a 64-dimensional latent. Input widths for Kuramoto, SIS and Swing are 200, 100 and 190. Complete encoder sizes are 136,768, 85,568 and 131,648, respectively. Relative to G1, the differences are +8.59%, −31.99% and +4.20%.
-- **D0** uses one-step Bellman targets from real next observations. **D1** uses a horizon-3 global MLP world model with five Q heads and two-hot value targets. Each policy call executes one action.
-- **A0** shares a Gaussian actor across actuators and conditions it on the native local state and global latent. **A1** uses a centralized diagonal Gaussian conditioned on the global latent.
+SIS 共同协议：动作 [-1,1]，干预强度 (a+1)/2，控制成本系数 0.1。历史 CMAT SIS 使用 [-1,0.2] 和零成本，单独保留在 `configs/historical/`，不能与共同协议直接比较。
 
-The matrix source declares the factor assignment for E0–E11. The eight baseline learners preserve their separate policy information, return or GAE calculation, and optimizer cadence. See the protocol and checkpoint details in [Reproduction](docs/reproduction.md).
+36 组消融由以下 12 个 arm × 三环境组成：
 
-## Results and references
+| Arm | Encoder | Dynamics | Actor |
+| --- | --- | --- | --- |
+| E0 | GATv2 | D1 | Shared |
+| E1 | Node-wise MLP | D1 | Shared |
+| E2 | GATv2 | D0 | Shared |
+| E3 | GATv2 | D1 | Global |
+| E4 | Node-wise MLP | D0 | Shared |
+| E5 | Node-wise MLP | D1 | Global |
+| E6 | GATv2 | D0 | Global |
+| E7 | Node-wise MLP | D0 | Global |
+| E8 | Global MLP-512 | D1 | Shared |
+| E9 | Global MLP-512 | D0 | Shared |
+| E10 | Global MLP-512 | D1 | Global |
+| E11 | Global MLP-512 | D0 | Global |
 
-Version 0.1.0 is a code-only candidate. The results schema and reproduction commands are in [Results](results/README.md). A single training seed supports descriptive comparisons. Episode-level intervals describe the evaluation distribution for a fixed checkpoint.
+GATv2 使用 Mean+Max readout；Node-wise MLP 匹配节点编码器参数量，不使用图邻接；Global MLP 直接展平原生特征，隐藏层固定512，输出64（不是严格参数量匹配）。D1 为 H=3 模型预测路径，D0 为真实下一观测的一步目标；Shared Actor 使用 [局部原生状态,z]，Global Actor 仅使用 z。E0 是完整算法，不重复计数。
+
+24 组对比：PPO、SAC、TD3、MAPPO、HAPPO、MAT、JointPPO、CMAT × 三环境。DMPO 不在范围内。正式预算为每组 seed 0、1M 真实环境步。
+
+## 4. 开发与测试
+
+先看 `configs/`、`netcc_rl/train.py` 和 [文件指南](docs/code-guide.md)，不需要一开始阅读所有底层代码。改算法后至少执行：
+
+```bash
+CUDA_VISIBLE_DEVICES="" OMP_NUM_THREADS=1 python -m pytest -q
+```
+
+GPU 加速及跨运行时恢复的完整验收尚未完成。正式配置和已运行实验身份保持冻结；新的研究变体建议新增配置/分支，不直接覆盖历史协议。
+
+## 5. 数据与引用
+
+本仓库暂不包含训练数据、模型权重或未发表论文。后续按 [results/README.md](results/README.md) 记录配置、源码版本、seed、协议和数据哈希。单训练 seed 的实验只支持描述性比较。以下为现有算法参考，不代表 NetCC-RL 论文已发表。
 
 - Hansen, Su and Wang. [TD-MPC2](https://arxiv.org/abs/2310.16828).
 - Brody, Alon and Yahav. [How Attentive are Graph Attention Networks?](https://arxiv.org/abs/2105.14491).

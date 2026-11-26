@@ -1,5 +1,0 @@
-cff-version: 1.2.0
-message: "For the software and the methods it incorporates, please use the references in the README."
-title: "NetCC-RL: Reinforcement Learning for Continuous Control of Complex Networks"
-type: software
-version: 0.1.0
