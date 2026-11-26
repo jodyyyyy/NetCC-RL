@@ -1,0 +1,314 @@
+diff --git a/csrc/common.cuh b/csrc/common.cuh
+index a2f473d..07a75a4 100644
+--- a/csrc/common.cuh
++++ b/csrc/common.cuh
+@@ -376,7 +376,12 @@ struct Vec2Ops<__nv_bfloat16> {
+     static __device__ __forceinline__ float2 to_float2(vec2_t v) { return __bfloat1622float2(v); }
+     static __device__ __forceinline__ vec2_t from_float2(float2 v) { return __float22bfloat162_rn(v); }
+     static __device__ __forceinline__ vec2_t fma(vec2_t a, vec2_t b, vec2_t c) {
++#if defined(__CUDA_ARCH__) && __CUDA_ARCH__ < 800
++        float2 av = to_float2(a), bv = to_float2(b), cv = to_float2(c);
++        return from_float2(make_float2(fmaf(av.x, bv.x, cv.x), fmaf(av.y, bv.y, cv.y)));
++#else
+         return __hfma2(a, b, c);
++#endif
+     }
+     static __device__ __forceinline__ vec2_t leaky_relu(vec2_t x, vec2_t neg_slope) {
+         vec2_t z = get_zero();
+diff --git a/csrc/gatv2/gatv2_kernel.cu b/csrc/gatv2/gatv2_kernel.cu
+index 1bb1616..9da6c46 100644
+--- a/csrc/gatv2/gatv2_kernel.cu
++++ b/csrc/gatv2/gatv2_kernel.cu
+@@ -220,7 +220,8 @@ GATv2Backward_AL(
+     float negative_slope,
+     float* __restrict__ grad_a,  // [N, H, D] always float32
+     cuda_t* __restrict__ grad_l, // [N, H, D]
+-    float* __restrict__ d_G      // [N, H]
++    float* __restrict__ d_G,     // [N, H]
++    const float* __restrict__ forward_output = nullptr // optional FP32 [N,H,D]
+ ) {
+     constexpr int VW = SelectVW<D_CONST, cuda_t>::value;
+     using Tile = TileOps<VW, cuda_t>;
+@@ -311,6 +312,25 @@ GATv2Backward_AL(
+ 
+     ns_t ns = Tile::make_ns(negative_slope);
+ 
++    // G = <grad_h, sum_j alpha_ij r_j> = <grad_h, forward_output>.
++    // The optional FP32 saved output removes a complete edge-score pass. Lower
++    // precision and the default path keep the original recomputation order.
++    if (forward_output != nullptr) {
++        if (warp_id == 0) {
++            double g = 0.0;
++            const float* gh = reinterpret_cast<const float*>(ghi_sh);
++            const float* out = forward_output + ((int64_t)node_i * H + head_h) * D_CONST;
++            for (int d = lane; d < D_CONST; d += kMaxThreadsInWarp)
++                g = fma(static_cast<double>(gh[d]), static_cast<double>(out[d]), g);
++            for (int offset = kMaxThreadsInWarp / 2; offset > 0; offset /= 2)
++                g += __shfl_down_sync(0xffffffff, g, offset);
++            if (lane == 0) {
++                *G_broadcast = g;
++                d_G[node_i * H + head_h] = g;
++            }
++        }
++        __syncthreads();
++    } else {
+     // pass 1: compute G_{i,h} = sum_j alpha_ij * <grad_h_i, r_j> (warp-strided)
+     float G_partial = 0.f;
+ 
+@@ -351,7 +371,9 @@ GATv2Backward_AL(
+         d_G[node_i * H + head_h] = G_i_h;
+     }
+     __syncthreads();
+-    G_i_h = *G_broadcast;
++
++    }
++    float G_i_h = *G_broadcast;
+ 
+     // pass 2: accumulate gradients (warp-strided)
+     for (int k = warp_id; k < num_neighbors; k += WARPS_PER_BLOCK) {
+@@ -979,14 +1001,14 @@ void GATv2Backward_CSR_Undirected_Impl(
+     cuda_t* grad_l,
+     cuda_t* grad_r,
+     float* grad_a,
+-    float* d_grad_a_reduced
++    float* d_grad_a_reduced,
++    float* d_G
+ ) {
+     dim3 nThreads(kMaxThreadsInWarp);
+     dim3 nBlocks(N, H);
+ 
+     // 1) Compute G[i,h] for all nodes
+-    float* d_G;
+-    CUDA_CHECK(cudaMalloc(&d_G, N * H * sizeof(float)));
++    // Scratch is owned by the PyTorch allocator, including CUDA Graph pools.
+ 
+     // G kernel shared: li (cuda_t) + ghi (cuda_t)
+     size_t sh_g = 2 * D_CONST * sizeof(cuda_t);
+@@ -1022,12 +1044,11 @@ void GATv2Backward_CSR_Undirected_Impl(
+             (D + kMaxThreadsInWarp - 1) / kMaxThreadsInWarp,
+             H
+         );
+-        ReduceGradAKernel<CHUNK, cuda_t><<<grad_A_reduce_gridDim, grad_A_reduce_blockDim, shmem_gradA_reduce_size>>>(
++        ReduceGradAKernel<CHUNK, cuda_t><<<grad_A_reduce_gridDim, grad_A_reduce_blockDim, shmem_gradA_reduce_size, stream>>>(
+             N, H, D, grad_a, d_grad_a_reduced
+         );
+     }, MakeIntVariant<32, 64, 128, 256, 512, 1024, 2048>(grad_A_reduce_row_chunk_size));
+ 
+-    CUDA_CHECK(cudaFree(d_G));
+ }
+ 
+ 
+@@ -1110,7 +1131,7 @@ void GATv2Backward_CSR_Impl_UNUSED(
+             (D + kMaxThreadsInWarp - 1) / kMaxThreadsInWarp,
+             H
+         );
+-        ReduceGradAKernel<CHUNK, cuda_t><<<grad_A_reduce_gridDim, grad_A_reduce_blockDim, shmem_gradA_reduce_size>>>(
++        ReduceGradAKernel<CHUNK, cuda_t><<<grad_A_reduce_gridDim, grad_A_reduce_blockDim, shmem_gradA_reduce_size, stream>>>(
+             N, H, D, grad_a, d_grad_a_reduced
+         );
+     }, MakeIntVariant<32, 64, 128, 256, 512, 1024, 2048>(grad_A_reduce_row_chunk_size));
+@@ -1186,7 +1207,8 @@ std::vector<torch::Tensor> gatv2_forward_cuda(
+     torch::Tensor logsumexp = torch::empty({N, H}, torch::TensorOptions().dtype(torch::kFloat32).device(l.device()));
+ 
+     float* d_logsumexp = logsumexp.data_ptr<float>();
+-    cudaStream_t stream = 0;
++    const c10::cuda::CUDAGuard device_guard(l.device());
++    cudaStream_t stream = c10::cuda::getCurrentCUDAStream(l.get_device());
+ 
+     TORCH_CHECK(D == 32 || D == 64 || D == 128 || D == 256,
+                 "GATv2 forward: unsupported head dim D=", D, "; supported: 32, 64, 128, 256");
+@@ -1250,7 +1272,8 @@ std::vector<torch::Tensor> gatv2_backward_cuda(
+     torch::Tensor bwd_heavy_nodes,
+     int light_warps_per_block,
+     int heavy_warps_per_block,
+-    bool is_directed
++    bool is_directed,
++    c10::optional<torch::Tensor> forward_output
+ ) {
+     TORCH_CHECK(grad_h.is_cuda(), "grad_h must be a CUDA tensor");
+     TORCH_CHECK(l.is_cuda(), "l must be a CUDA tensor");
+@@ -1327,7 +1350,20 @@ std::vector<torch::Tensor> gatv2_backward_cuda(
+ 
+     const float* d_logsumexp = logsumexp.data_ptr<float>();
+     float* d_grad_a          = grad_a.data_ptr<float>();
+-    cudaStream_t stream = 0;
++    const c10::cuda::CUDAGuard device_guard(l.device());
++    cudaStream_t stream = c10::cuda::getCurrentCUDAStream(l.get_device());
++
++    const float* d_forward_output = nullptr;
++    if (forward_output.has_value()) {
++        const auto& out = *forward_output;
++        TORCH_CHECK(is_directed && l.scalar_type() == torch::kFloat32,
++                    "saved-output backward requires directed FP32 GATv2");
++        TORCH_CHECK(out.is_cuda() && out.device() == l.device() &&
++                    out.scalar_type() == torch::kFloat32 && out.is_contiguous() &&
++                    out.numel() == N * H * D,
++                    "forward_output must be contiguous FP32 [N,H,D] on the input device");
++        d_forward_output = out.data_ptr<float>();
++    }
+ 
+     TORCH_CHECK(D == 32 || D == 64 || D == 128 || D == 256,
+                 "GATv2 backward: unsupported head dim D=", D, "; supported: 32, 64, 128, 256");
+@@ -1369,7 +1405,7 @@ std::vector<torch::Tensor> gatv2_backward_cuda(
+                     index_ptr<index_t>(row_ptr), index_ptr<index_t>(col_idx),
+                     index_ptr<index_t>(node_indices),
+                     attn_ptr, d_logsumexp, negative_slope,
+-                    d_grad_a, grad_l_ptr, d_G);
++                    d_grad_a, grad_l_ptr, d_G, d_forward_output);
+             }, MakeIndexVariant<int32_t, int64_t, uint32_t, uint64_t>(idx_dtype),
+                MakeTypeVariant<float, at::Half, at::BFloat16>(l.scalar_type()),
+                MakeIntVariant<32, 64, 128, 256>((int)D),
+@@ -1431,7 +1467,7 @@ std::vector<torch::Tensor> gatv2_backward_cuda(
+                     (D + kMaxThreadsInWarp - 1) / kMaxThreadsInWarp,
+                     H
+                 );
+-                ReduceGradAKernel<CHUNK, cuda_t><<<grad_A_reduce_gridDim, grad_A_reduce_blockDim, shmem_gradA_reduce_size>>>(
++                ReduceGradAKernel<CHUNK, cuda_t><<<grad_A_reduce_gridDim, grad_A_reduce_blockDim, shmem_gradA_reduce_size, stream>>>(
+                     N, H, D, d_grad_a, grad_a_reduced_f32.data_ptr<float>()
+                 );
+             }, MakeTypeVariant<float, at::Half, at::BFloat16>(l.scalar_type()),
+@@ -1439,6 +1475,7 @@ std::vector<torch::Tensor> gatv2_backward_cuda(
+         }
+     } else {
+         // Undirected path: fused G + ALR kernel (no bucketing, no CSR^T)
++        auto grad_G = torch::empty({N, H}, logsumexp.options());
+         std::visit([&](auto idxInfo, auto typeInfo, auto d_c) {
+             using index_t = typename decltype(idxInfo)::Type;
+             using torch_t = typename decltype(typeInfo)::TorchType;
+@@ -1463,7 +1500,7 @@ std::vector<torch::Tensor> gatv2_backward_cuda(
+                 negative_slope,
+                 grad_A_reduce_row_chunk_size,
+                 stream,
+-                grad_l_ptr, grad_r_ptr, d_grad_a, grad_a_reduced_ptr
++                grad_l_ptr, grad_r_ptr, d_grad_a, grad_a_reduced_ptr, grad_G.data_ptr<float>()
+             );
+         }, MakeIndexVariant<int32_t, int64_t, uint32_t, uint64_t>(idx_dtype),
+            MakeTypeVariant<float, at::Half, at::BFloat16>(l.scalar_type()),
+diff --git a/csrc/kernels.cuh b/csrc/kernels.cuh
+index 4f90411..f884d6b 100644
+--- a/csrc/kernels.cuh
++++ b/csrc/kernels.cuh
+@@ -65,7 +65,8 @@ std::vector<torch::Tensor> gatv2_backward_cuda(
+     torch::Tensor bwd_heavy_nodes,
+     int light_warps_per_block = 1,
+     int heavy_warps_per_block = 8,
+-    bool is_directed = true
++    bool is_directed = true,
++    c10::optional<torch::Tensor> forward_output = c10::nullopt
+ );
+ 
+ // ============================================================================
+diff --git a/csrc/turbo_gnn.cpp b/csrc/turbo_gnn.cpp
+index 23679ee..3000324 100644
+--- a/csrc/turbo_gnn.cpp
++++ b/csrc/turbo_gnn.cpp
+@@ -39,7 +39,8 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
+           py::arg("bwd_light_nodes"), py::arg("bwd_heavy_nodes"),
+           py::arg("light_warps_per_block") = 1,
+           py::arg("heavy_warps_per_block") = 8,
+-          py::arg("is_directed") = true);
++          py::arg("is_directed") = true,
++          py::arg("forward_output") = py::none());
+ 
+     // Graph Transformer aggregation
+     m.def("gt_forward_csr_mh", &graph_attention_forward_csr_mh_cuda,
+diff --git a/turbo_gnn/_functions.py b/turbo_gnn/_functions.py
+index 2b61f82..5e1fda2 100644
+--- a/turbo_gnn/_functions.py
++++ b/turbo_gnn/_functions.py
+@@ -143,6 +143,7 @@ class gatv2_function(torch.autograd.Function):
+         backward_light_warps,
+         backward_heavy_warps,
+         is_directed,
++        save_output_for_backward,
+     ):
+         if torch.is_autocast_enabled():
+             attention_weights = attention_weights.to(torch.get_autocast_gpu_dtype())
+@@ -167,6 +168,8 @@ class gatv2_function(torch.autograd.Function):
+         ctx.heads = x_left.shape[1]
+         ctx.head_dim = x_left.shape[2]
+ 
++        if save_output_for_backward and (not is_directed or x_left.dtype != torch.float32):
++            raise ValueError("saved-output backward requires directed FP32 GATv2")
+         ctx.save_for_backward(
+             x_left,
+             x_right,
+@@ -176,6 +179,7 @@ class gatv2_function(torch.autograd.Function):
+             indices_backward,
+             attention_weights,
+             logsumexp,
++            output if save_output_for_backward else None,
+             fwd_light_nodes,
+             fwd_heavy_nodes,
+             bwd_light_nodes,
+@@ -196,6 +200,7 @@ class gatv2_function(torch.autograd.Function):
+             indices_backward,
+             attention_weights,
+             logsumexp,
++            saved_output,
+             fwd_light_nodes,
+             fwd_heavy_nodes,
+             bwd_light_nodes,
+@@ -205,7 +210,7 @@ class gatv2_function(torch.autograd.Function):
+         num_heads = ctx.heads
+         head_dim = ctx.head_dim
+ 
+-        grad_output = grad_output.view(-1, num_heads, head_dim)
++        grad_output = grad_output.contiguous().view(-1, num_heads, head_dim)
+ 
+         grad_x_left, grad_x_right, grad_attention = _C.gatv2_backward(
+             grad_output,
+@@ -226,10 +231,11 @@ class gatv2_function(torch.autograd.Function):
+             ctx.backward_light_warps,
+             ctx.backward_heavy_warps,
+             ctx.is_directed,
++            saved_output,
+         )
+ 
+-        # 4 CSR tensors + 3 gradients + 11 non-Variable args = 18 total
+-        return (None, None, None, None, grad_x_left, grad_x_right, grad_attention) + (None,) * 11
++        # 4 CSR tensors + 3 gradients + 12 non-Variable args = 19 total
++        return (None, None, None, None, grad_x_left, grad_x_right, grad_attention) + (None,) * 12
+ 
+ 
+ class _FusedGraphAttention(torch.autograd.Function):
+diff --git a/turbo_gnn/_kernels.py b/turbo_gnn/_kernels.py
+index f916da5..170c152 100644
+--- a/turbo_gnn/_kernels.py
++++ b/turbo_gnn/_kernels.py
+@@ -115,6 +115,7 @@ class GATv2AggrKernel(TunableKernel):
+             self.backward_light_warps,
+             self.backward_heavy_warps,
+             graph.is_directed,
++            kwargs.get("save_output_for_backward", False),
+         )
+ 
+     def get_tunable_forward_kernel_params(self) -> list[TunableParam]:
+@@ -152,6 +153,7 @@ class GATv2AggrKernel(TunableKernel):
+                 x_neighbors=x_neighbors,
+                 attention_weights=attention_weights,
+                 negative_slope=negative_slope,
++                save_output_for_backward=kwargs.get("save_output_for_backward", False),
+             )
+ 
+         return _bench
+diff --git a/turbo_gnn/ops.py b/turbo_gnn/ops.py
+index 642fd3c..eaf3236 100644
+--- a/turbo_gnn/ops.py
++++ b/turbo_gnn/ops.py
+@@ -89,6 +89,7 @@ def gatv2_aggr(
+     forward_heavy_warps: int = 8,
+     backward_light_warps: int = 1,
+     backward_heavy_warps: int = 8,
++    save_output_for_backward: bool = False,
+ ) -> torch.Tensor:
+     """GATv2 attention-weighted aggregation.
+ 
+@@ -132,6 +133,7 @@ def gatv2_aggr(
+         backward_light_warps,
+         backward_heavy_warps,
+         graph.is_directed,
++        save_output_for_backward,
+     )
+ 
+ 

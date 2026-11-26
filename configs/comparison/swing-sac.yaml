@@ -1,0 +1,53 @@
+schema_version: 1
+kind: comparison
+algorithm: sac
+environment: swing
+protocol: comparison-swing-v1
+seed: 0
+device: cuda:0
+steps: 1000000
+collector_batch_size: 1
+action_bounds:
+- -1.0
+- 1.0
+action_semantics: native_SB3
+drivers:
+- 0
+- 2
+- 4
+- 6
+- 8
+- 11
+- 14
+- 15
+- 24
+- 26
+- 27
+- 29
+- 30
+- 31
+- 32
+- 33
+- 34
+- 35
+- 37
+snapshot_sha256: 2012711db6643328ff05d205a442d32df61fab1866a10f8ea2d20814537c4682
+profile:
+  formal_status: candidate_ready_for_pilot
+  implementation: Stable-Baselines3 2.4.1 SAC
+  regime: centralized global observation -> joint 50-D action
+  optimizer: Adam
+  learning_rate: 0.0003
+  net_arch:
+  - 256
+  - 256
+  replay_capacity: 1000000
+  learning_starts: 5000
+  batch_size: 512
+  gamma: 0.99
+  tau: 0.005
+  train_freq_env_steps: 1
+  gradient_steps: 1
+  entropy_coef: auto
+  target_entropy: auto
+implementation: {}

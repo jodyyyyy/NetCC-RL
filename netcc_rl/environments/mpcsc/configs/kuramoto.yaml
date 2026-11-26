@@ -1,0 +1,14 @@
+task: mpcsc-kuramoto
+source_config: ReferenceCode/MPCSC/mbrl/examples/conf/overrides/pets_kuramoto.yaml
+random_init: true
+max_episode_steps: 150
+params_to_env:
+  net_type: ER
+  T: 150
+  node_num: 50
+  driver_node_num: 50
+  observe_node_num: 50
+  avg_degree: 6
+  coupling: 0.6
+  noise_std: 0.0
+  seed: 111111

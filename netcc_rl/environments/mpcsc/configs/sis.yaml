@@ -1,0 +1,16 @@
+task: mpcsc-sis
+source_config: ReferenceCode/MPCSC/mbrl/examples/conf/overrides/pets_sis.yaml
+random_init: true
+max_episode_steps: 150
+params_to_env:
+  net_type: ER
+  T: 150
+  node_num: 20
+  driver_node_num: 20
+  observe_node_num: 20
+  initial_I_node_num: 5
+  beta: 0.6
+  gamma: 0.2
+  noise_std: 0.0
+  seed: 1111
+  sis_control_cost_coef: 0.1

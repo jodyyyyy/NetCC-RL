@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "netcc-rl"
+version = "0.1.0"
+description = "Reinforcement learning for continuous control of complex networks"
+readme = "README.md"
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "torch>=2.4,<2.5",
+    "numpy>=1.26,<2",
+    "gymnasium==1.0.0",
+    "networkx>=3.4,<4",
+    "PyYAML>=6,<7",
+    "scipy>=1.9,<2",
+    "tensordict==0.5.0",
+    "torchrl==0.5.0",
+    "torch-geometric==2.6.1",
+]
+
+[project.optional-dependencies]
+baselines = ["stable-baselines3==2.4.1"]
+analysis = ["matplotlib>=3.8,<4", "tensorboard>=2.17,<3"]
+test = ["pytest>=8,<10"]
+
+[tool.setuptools.packages.find]
+include = ["netcc_rl*"]
+
+[tool.setuptools.package-data]
+netcc_rl = ["ablation.yaml"]
+"netcc_rl.algorithms.proposed" = ["config.yaml", "configs/exp016/*.yaml", "LICENSE.TDMPC2", "TURBO_GNN_MANIFEST.json"]
+"netcc_rl.algorithms.baselines" = ["configs/*.json", "licenses/*.txt"]
+"netcc_rl.algorithms.baselines.vendor.onpolicy" = ["LICENSE", "SOURCE_MANIFEST.json", "defaults.json"]
+"netcc_rl.environments.mpcsc" = ["LICENSE.MPCSC", "configs/*.yaml"]
+"netcc_rl.environments.graph" = ["data/*.json", "data/*/*.json"]

@@ -1,0 +1,12 @@
+{
+  "status": "IMPLEMENTING_PENDING_WORK_REVIEW_NOT_AUTHORIZED",
+  "formal_training_authorized": false,
+  "selection": "Single explicit Kuramoto adaptation profile per paper; no tuning or sweep. Width/blocks/head, Adam LR and PPO constants follow MAT general config and JointPPO appendix, not map-specific winning settings. Batch32, rollout150 and continuous bounded distribution are task adaptations. CMAT inherits this fixed optimizer profile; its latent length is the 50 controlled agents.",
+  "algorithms": {
+    "mat": {"width":64,"heads":1,"blocks":1,"consensus_steps":50,"learning_rate":0.0005,"gamma":0.99,"gae_lambda":0.95,"epochs":15,"batch_size":32,"clip":0.2,"entropy_coef":0.01,"value_coef":1.0,"max_grad_norm":10.0},
+    "cmat": {"width":64,"heads":1,"blocks":1,"consensus_steps":50,"learning_rate":0.0005,"gamma":0.99,"gae_lambda":0.95,"epochs":15,"batch_size":32,"clip":0.2,"entropy_coef":0.01,"value_coef":1.0,"max_grad_norm":10.0},
+    "jointppo": {"width":64,"heads":1,"blocks":1,"consensus_steps":50,"learning_rate":0.0005,"gamma":0.99,"gae_lambda":0.95,"epochs":10,"batch_size":32,"clip":0.2,"entropy_coef":0.01,"value_coef":1.0,"max_grad_norm":10.0}
+  },
+  "smoke_only_overrides": {"width":16,"epochs":1,"batch_size":16,"consensus_steps":4},
+  "shared_protocol": "Existing EXP-015 environment/seed/evaluation/1M-step budget remains unchanged. Smoke overrides are integration evidence only."
+}

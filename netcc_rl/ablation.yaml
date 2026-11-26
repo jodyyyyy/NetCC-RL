@@ -1,0 +1,28 @@
+base_config_sha256:
+  kuramoto: 7f84c43348139228e305f894e6f29a903b45431f1c801cf6a2cc80dc615eb1eb
+  sis: bc74088e8c0d0d6bb335168446204aac34203acc69f38e8e9b51a3542da4a778
+  swing: 96d5d952fedb58022b67ab8cbca07c9acdca5fca469635eec3de6a4671977de3
+schema: exp017_factorial_v1
+environments: [kuramoto, sis, swing]
+factors:
+  G: {G0: matched_node_mlp, G1: gatv2_prior}
+  D: {D0: disabled, D1: global_mlp}
+  A: {A0: shared_native_state, A1: global_latent}
+arms:
+  E0: {G: G1, D: D1, A: A0}
+  E1: {G: G0, D: D1, A: A0}
+  E2: {G: G1, D: D0, A: A0}
+  E3: {G: G1, D: D1, A: A1}
+  E4: {G: G0, D: D0, A: A0}
+  E5: {G: G0, D: D1, A: A1}
+  E6: {G: G1, D: D0, A: A1}
+  E7: {G: G0, D: D0, A: A1}
+global_mlp_encoders: {G2: global_mlp}
+global_mlp_hidden_width: 512
+global_mlp_arms:
+  E8: {G: G2, D: D1, A: A0}
+  E9: {G: G2, D: D0, A: A0}
+  E10: {G: G2, D: D1, A: A1}
+  E11: {G: G2, D: D0, A: A1}
+global_mlp_controls: {E8: E0, E9: E2, E10: E3, E11: E6}
+complete_gatv2_parameters: {kuramoto: 125952, sis: 125824, swing: 126336}

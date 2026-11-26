@@ -1,0 +1,49 @@
+schema_version: 1
+kind: comparison
+algorithm: mat
+environment: swing
+protocol: comparison-swing-v1
+seed: 0
+device: cuda:0
+steps: 1000000
+collector_batch_size: 1
+action_bounds:
+- -1.0
+- 1.0
+action_semantics: tanh_normal
+drivers:
+- 0
+- 2
+- 4
+- 6
+- 8
+- 11
+- 14
+- 15
+- 24
+- 26
+- 27
+- 29
+- 30
+- 31
+- 32
+- 33
+- 34
+- 35
+- 37
+snapshot_sha256: 2012711db6643328ff05d205a442d32df61fab1866a10f8ea2d20814537c4682
+profile:
+  width: 64
+  heads: 1
+  blocks: 1
+  consensus_steps: 50
+  learning_rate: 0.0005
+  gamma: 0.99
+  gae_lambda: 0.95
+  epochs: 15
+  batch_size: 32
+  clip: 0.2
+  entropy_coef: 0.01
+  value_coef: 1.0
+  max_grad_norm: 10.0
+implementation: {}

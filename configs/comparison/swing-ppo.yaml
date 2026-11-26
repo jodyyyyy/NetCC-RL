@@ -1,0 +1,55 @@
+schema_version: 1
+kind: comparison
+algorithm: ppo
+environment: swing
+protocol: comparison-swing-v1
+seed: 0
+device: cuda:0
+steps: 1000000
+collector_batch_size: 1
+action_bounds:
+- -1.0
+- 1.0
+action_semantics: Gaussian stored unclipped; SB3 clips at environment boundary
+drivers:
+- 0
+- 2
+- 4
+- 6
+- 8
+- 11
+- 14
+- 15
+- 24
+- 26
+- 27
+- 29
+- 30
+- 31
+- 32
+- 33
+- 34
+- 35
+- 37
+snapshot_sha256: 2012711db6643328ff05d205a442d32df61fab1866a10f8ea2d20814537c4682
+profile:
+  formal_status: candidate_ready_for_pilot
+  implementation: Stable-Baselines3 2.4.1 PPO
+  regime: centralized global observation -> joint 50-D action
+  optimizer: Adam
+  learning_rate: 0.0003
+  net_arch:
+  - 64
+  - 64
+  activation: tanh
+  rollout_steps: 150
+  batch_size: 150
+  epochs: 10
+  gamma: 0.99
+  gae_lambda: 0.95
+  clip_range: 0.2
+  entropy_coef: 0
+  value_coef: 0.5
+  max_grad_norm: 0.5
+  normalize_advantage: true
+implementation: {}

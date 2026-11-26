@@ -1,0 +1,11 @@
+# Direct dependencies used by the frozen training profiles.
+torch==2.4.0
+numpy==1.26.4
+gymnasium==1.0.0
+networkx==3.4.2
+PyYAML==6.0.2
+scipy==1.15.2
+tensordict==0.5.0
+torchrl==0.5.0
+torch-geometric==2.6.1
+stable-baselines3==2.4.1

@@ -1,0 +1,7 @@
+include LICENSE CITATION.cff THIRD_PARTY_NOTICES.md constraints-training.txt
+graft configs
+graft docs
+graft results
+graft scripts
+graft tests
+global-exclude *.py[cod]

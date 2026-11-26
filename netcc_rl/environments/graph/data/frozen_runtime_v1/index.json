@@ -1,0 +1,24 @@
+{
+  "schema": "frozen_runtime_v1",
+  "snapshots": {
+    "727097f73c067207da98856f2d43248ca1972f45d469358ce9ab9ddbc1a6a16d": {
+      "file": "727097f73c067207da98856f2d43248ca1972f45d469358ce9ab9ddbc1a6a16d.json",
+      "sha256": "388ef88d9b058bd5c30b3581c05bc1f574d5357a550d17353cfa0a9630013260",
+      "preset": "tdmpc2/configs/exp016/kuramoto.yaml"
+    },
+    "2ec30aee0d7f531db80115c14220cf47feb118976f6ca263ba608219037c230c": {
+      "file": "2ec30aee0d7f531db80115c14220cf47feb118976f6ca263ba608219037c230c.json",
+      "sha256": "6daf24ef8b1f1daf9a6e2e9653cc26aabd7c6227a1cab1fec2c57beb2473e853",
+      "preset": "tdmpc2/configs/exp016/sis.yaml"
+    },
+    "52b63eeefa2a3fe814c4f1be49051dad9ccda1e816a8548f3c2dc5e58fa94244": {
+      "file": "52b63eeefa2a3fe814c4f1be49051dad9ccda1e816a8548f3c2dc5e58fa94244.json",
+      "sha256": "cd9a63a388f05c105410125386fda21741baeb865e3a43abe2b8d751decbbc85",
+      "preset": "tdmpc2/configs/exp016/swing.yaml"
+    }
+  },
+  "physical": {
+    "c6802ab9186647252b7c55bbfaa240e8d8a051a01d6641e3b83bd14f6f489725": "727097f73c067207da98856f2d43248ca1972f45d469358ce9ab9ddbc1a6a16d",
+    "e878a5f5fb999b7e6a10992fe01940d264451c823ac34827a1b3b6a3874e8e34": "2ec30aee0d7f531db80115c14220cf47feb118976f6ca263ba608219037c230c"
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "url": "https://github.com/marlbenchmark/on-policy",
+  "commit": "de66d7a4b23fac2513f56f96f73b3f5cb96695ac",
+  "license": "MIT",
+  "modifications": "MAPPO dependency closure only; absolute import namespace changed; original parser defaults recorded as JSON, algorithm fixed to mappo. No learning/loss/optimizer changes. Removed obsolete alternative-algorithm names from two parameter docstrings.",
+  "files": {
+    "algorithms/r_mappo/r_mappo.py": {
+      "original_sha256": "8a889d010cb5e327eeffa9d8ab1d910cab384e295d0690dd05e268dc56e047be",
+      "sha256": "b6dfba19eea5aa835b6c3bcecca03413865bc8e9a46405ac5534be892d57dea7"
+    },
+    "algorithms/r_mappo/algorithm/rMAPPOPolicy.py": {
+      "original_sha256": "33bb77fea3034c9bc79af6add5a7a5989cbb65056332786756e6ac502aa9d5ca",
+      "sha256": "544cc4d65ec297b79d042aca04034edcf1e1570d090f5e31eec2bca41c3c3c09"
+    },
+    "algorithms/r_mappo/algorithm/r_actor_critic.py": {
+      "original_sha256": "db6ff5de5b56e8a28a91181acf831bddd1c8b12d124a26025d9f63bcd3f98ee5",
+      "sha256": "2f25b7e74fc7d48e1d99a6d02d9b49c6b2e40e4c165ebeefcca1b15f8e085ea6"
+    },
+    "utils/separated_buffer.py": {
+      "original_sha256": "ae1898d01d7162c387a86bd8f09085d9c2469954d6f4424aaf07aceff0e8124b",
+      "sha256": "ae1898d01d7162c387a86bd8f09085d9c2469954d6f4424aaf07aceff0e8124b"
+    },
+    "utils/util.py": {
+      "original_sha256": "397ec9d68851663ad012bafa60a65b6510405b64f476913b0700bb6fcca22e0c",
+      "sha256": "397ec9d68851663ad012bafa60a65b6510405b64f476913b0700bb6fcca22e0c"
+    },
+    "utils/valuenorm.py": {
+      "original_sha256": "df19f747f5845c337d1933ee1a092fa3c758f9ada38bfa3e32aa7d277ac845a2",
+      "sha256": "df19f747f5845c337d1933ee1a092fa3c758f9ada38bfa3e32aa7d277ac845a2"
+    },
+    "algorithms/utils/util.py": {
+      "original_sha256": "390fc541abc72231b864e6017b2a8e75b58a1bc593e87fc3bc27b80b9effa2c6",
+      "sha256": "390fc541abc72231b864e6017b2a8e75b58a1bc593e87fc3bc27b80b9effa2c6"
+    },
+    "algorithms/utils/cnn.py": {
+      "original_sha256": "410e28dc1977daefc9571207173f6b54caacefae2f9e9a59dc32a6bd7f213b36",
+      "sha256": "410e28dc1977daefc9571207173f6b54caacefae2f9e9a59dc32a6bd7f213b36"
+    },
+    "algorithms/utils/mlp.py": {
+      "original_sha256": "790c0c6ec9f38569919e7e5c065d765c2b808da962619beb85eb6f7ba3a30087",
+      "sha256": "790c0c6ec9f38569919e7e5c065d765c2b808da962619beb85eb6f7ba3a30087"
+    },
+    "algorithms/utils/rnn.py": {
+      "original_sha256": "8a5f7bc2a9263d4ebd3234e877ee305c5caae24987d39e1155fc3fe35e089eaf",
+      "sha256": "8a5f7bc2a9263d4ebd3234e877ee305c5caae24987d39e1155fc3fe35e089eaf"
+    },
+    "algorithms/utils/act.py": {
+      "original_sha256": "e1ca14c07401baa2f2342853c09dd9faf0ce89eac6facd02bbe078d2439b7f22",
+      "sha256": "e1ca14c07401baa2f2342853c09dd9faf0ce89eac6facd02bbe078d2439b7f22"
+    },
+    "algorithms/utils/distributions.py": {
+      "original_sha256": "157092a52d685881c0c10d2e5487eaebb7a7d66b3d608a7e5f5ca6ea42b9af7a",
+      "sha256": "157092a52d685881c0c10d2e5487eaebb7a7d66b3d608a7e5f5ca6ea42b9af7a"
+    },
+    "algorithms/utils/popart.py": {
+      "original_sha256": "9205b0ce68ec6b9dc11673adfe788ba26e9f301f31c6a2f7f5d242e412d760fe",
+      "sha256": "9205b0ce68ec6b9dc11673adfe788ba26e9f301f31c6a2f7f5d242e412d760fe"
+    },
+    "defaults.json": {
+      "sha256": "cface93fe75fd585168aacace8fe20556404179e722c6e1cb2b8bb210856e900"
+    },
+    "LICENSE": {
+      "sha256": "0335be1babd64ea33302d4d365cdecc5985aaf5c4481236e0c5da07eb37a4580"
+    },
+    "__init__.py": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "algorithms/__init__.py": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "algorithms/r_mappo/__init__.py": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "algorithms/r_mappo/algorithm/__init__.py": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "algorithms/utils/__init__.py": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "utils/__init__.py": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  }
+}

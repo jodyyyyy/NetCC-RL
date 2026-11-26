@@ -1,0 +1,152 @@
+schema_version: 1
+kind: comparison
+algorithm: cmat
+environment: kuramoto
+protocol: cmat-kuramoto-historical-v1
+seed: 0
+device: cuda:0
+steps: 1000000
+collector_batch_size: 32
+action_bounds: &id002
+- -1.0
+- 1.0
+action_semantics: tanh-affine continuous Gaussian
+drivers: &id001
+- 0
+- 1
+- 2
+- 3
+- 4
+- 5
+- 6
+- 7
+- 8
+- 9
+- 10
+- 11
+- 12
+- 13
+- 14
+- 15
+- 16
+- 17
+- 18
+- 19
+- 20
+- 21
+- 22
+- 27
+- 31
+- 33
+- 36
+- 37
+- 40
+- 41
+- 47
+- 49
+- 55
+- 58
+- 60
+- 62
+- 66
+- 67
+- 68
+- 71
+- 72
+- 79
+- 81
+- 82
+- 89
+- 93
+- 94
+- 95
+- 96
+- 97
+snapshot_sha256: 1871f89774cfbecb5982085d48dd8e554b246fdd7dc59abe06b83db19387fae0
+profile:
+  width: 64
+  heads: 1
+  blocks: 1
+  consensus_steps: 50
+  learning_rate: 0.0005
+  gamma: 0.99
+  gae_lambda: 0.95
+  epochs: 15
+  batch_size: 32
+  clip: 0.2
+  entropy_coef: 0.01
+  value_coef: 1.0
+  max_grad_norm: 10.0
+implementation:
+  adapter_identity:
+    version: exp015_task_adapter_v1
+    task: kuramoto
+    snapshot_sha256: 727097f73c067207da98856f2d43248ca1972f45d469358ce9ab9ddbc1a6a16d
+    raw_shape:
+    - 100
+    - 1
+    encoded_shape:
+    - 100
+    - 2
+    controls: *id001
+    action_groups:
+    - - 0
+    - - 1
+    - - 2
+    - - 3
+    - - 4
+    - - 5
+    - - 6
+    - - 7
+    - - 8
+    - - 9
+    - - 10
+    - - 11
+    - - 12
+    - - 13
+    - - 14
+    - - 15
+    - - 16
+    - - 17
+    - - 18
+    - - 19
+    - - 20
+    - - 21
+    - - 22
+    - - 23
+    - - 24
+    - - 25
+    - - 26
+    - - 27
+    - - 28
+    - - 29
+    - - 30
+    - - 31
+    - - 32
+    - - 33
+    - - 34
+    - - 35
+    - - 36
+    - - 37
+    - - 38
+    - - 39
+    - - 40
+    - - 41
+    - - 42
+    - - 43
+    - - 44
+    - - 45
+    - - 46
+    - - 47
+    - - 48
+    - - 49
+    action_dim: 50
+    action_family: gaussian
+    bounds: *id002
+    channels: 1
+    observation_contract: null
+    action_contract: null
+    a10_head: null
+    sha256: 25f8d8e2837b6238e421fb5eb27be806e332c79fd40ece613ba1c991b8b8fffb
+  consensus_backend: incremental
+  expected_optimizer_steps: 500010

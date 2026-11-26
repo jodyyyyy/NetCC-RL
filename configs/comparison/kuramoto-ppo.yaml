@@ -1,0 +1,86 @@
+schema_version: 1
+kind: comparison
+algorithm: ppo
+environment: kuramoto
+protocol: comparison-kuramoto-v1
+seed: 0
+device: cuda:0
+steps: 1000000
+collector_batch_size: 1
+action_bounds:
+- -1.0
+- 1.0
+action_semantics: Gaussian stored unclipped; SB3 clips at environment boundary
+drivers:
+- 0
+- 1
+- 2
+- 3
+- 4
+- 5
+- 6
+- 7
+- 8
+- 9
+- 10
+- 11
+- 12
+- 13
+- 14
+- 15
+- 16
+- 17
+- 18
+- 19
+- 20
+- 21
+- 22
+- 27
+- 31
+- 33
+- 36
+- 37
+- 40
+- 41
+- 47
+- 49
+- 55
+- 58
+- 60
+- 62
+- 66
+- 67
+- 68
+- 71
+- 72
+- 79
+- 81
+- 82
+- 89
+- 93
+- 94
+- 95
+- 96
+- 97
+snapshot_sha256: 1871f89774cfbecb5982085d48dd8e554b246fdd7dc59abe06b83db19387fae0
+profile:
+  formal_status: candidate_ready_for_pilot
+  implementation: Stable-Baselines3 2.4.1 PPO
+  regime: centralized global observation -> joint 50-D action
+  optimizer: Adam
+  learning_rate: 0.0003
+  net_arch:
+  - 64
+  - 64
+  activation: tanh
+  rollout_steps: 150
+  batch_size: 150
+  epochs: 10
+  gamma: 0.99
+  gae_lambda: 0.95
+  clip_range: 0.2
+  entropy_coef: 0
+  value_coef: 0.5
+  max_grad_norm: 0.5
+  normalize_advantage: true
+implementation: {}

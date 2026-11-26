@@ -1,0 +1,152 @@
+schema_version: 1
+kind: comparison
+algorithm: cmat
+environment: sis
+protocol: cmat-sis-historical-v1
+seed: 0
+device: cuda:0
+steps: 1000000
+collector_batch_size: 32
+action_bounds: &id002
+- -1.0
+- 0.2
+action_semantics: tanh-affine continuous Gaussian
+drivers: &id001
+- 0
+- 1
+- 2
+- 3
+- 4
+- 5
+- 6
+- 7
+- 8
+- 9
+- 10
+- 11
+- 12
+- 13
+- 14
+- 15
+- 16
+- 17
+- 18
+- 19
+- 20
+- 21
+- 22
+- 23
+- 24
+- 25
+- 26
+- 27
+- 28
+- 29
+- 30
+- 31
+- 32
+- 33
+- 34
+- 35
+- 36
+- 40
+- 46
+- 48
+- 57
+- 64
+- 66
+- 67
+- 68
+- 72
+- 80
+- 85
+- 91
+- 97
+snapshot_sha256: 1708b91f5560ddfe6959abc5ffeeeb12230b1473116cc0b671931e9e1a96eab6
+profile:
+  width: 64
+  heads: 1
+  blocks: 1
+  consensus_steps: 50
+  learning_rate: 0.0005
+  gamma: 0.99
+  gae_lambda: 0.95
+  epochs: 15
+  batch_size: 32
+  clip: 0.2
+  entropy_coef: 0.01
+  value_coef: 1.0
+  max_grad_norm: 10.0
+implementation:
+  adapter_identity:
+    version: exp015_task_adapter_v1
+    task: sis
+    snapshot_sha256: 153b2c3e2fde0a8ce14c4a4bdaec717cfc872b481c22433afe7a353b4e13c6b3
+    raw_shape:
+    - 100
+    - 1
+    encoded_shape:
+    - 100
+    - 1
+    controls: *id001
+    action_groups:
+    - - 0
+    - - 1
+    - - 2
+    - - 3
+    - - 4
+    - - 5
+    - - 6
+    - - 7
+    - - 8
+    - - 9
+    - - 10
+    - - 11
+    - - 12
+    - - 13
+    - - 14
+    - - 15
+    - - 16
+    - - 17
+    - - 18
+    - - 19
+    - - 20
+    - - 21
+    - - 22
+    - - 23
+    - - 24
+    - - 25
+    - - 26
+    - - 27
+    - - 28
+    - - 29
+    - - 30
+    - - 31
+    - - 32
+    - - 33
+    - - 34
+    - - 35
+    - - 36
+    - - 37
+    - - 38
+    - - 39
+    - - 40
+    - - 41
+    - - 42
+    - - 43
+    - - 44
+    - - 45
+    - - 46
+    - - 47
+    - - 48
+    - - 49
+    action_dim: 50
+    action_family: gaussian
+    bounds: *id002
+    channels: 1
+    observation_contract: null
+    action_contract: null
+    a10_head: null
+    sha256: 6acf73a322e87443b4bee9df382a12898bb801749a07e19a16d1ba3e020d574f
+  consensus_backend: incremental
+  expected_optimizer_steps: 500010

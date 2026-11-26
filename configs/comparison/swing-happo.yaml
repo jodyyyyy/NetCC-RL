@@ -1,0 +1,69 @@
+schema_version: 1
+kind: comparison
+algorithm: happo
+environment: swing
+protocol: comparison-swing-v1
+seed: 0
+device: cuda:0
+steps: 1000000
+collector_batch_size: 1
+action_bounds:
+- -1.0
+- 1.0
+action_semantics: Gaussian stored unclipped; native environment clips
+drivers:
+- 0
+- 2
+- 4
+- 6
+- 8
+- 11
+- 14
+- 15
+- 24
+- 26
+- 27
+- 29
+- 30
+- 31
+- 32
+- 33
+- 34
+- 35
+- 37
+snapshot_sha256: 2012711db6643328ff05d205a442d32df61fab1866a10f8ea2d20814537c4682
+profile:
+  gamma: 0.99
+  gae_lambda: 1.0
+  batch_episode: 10
+  kl_coeff: 0.2
+  kl_target: 0.01
+  num_sgd_iter: 5
+  grad_clip: 10.0
+  clip_param: 0.3
+  critic_lr: 0.0005
+  actor_lr: 5.0e-07
+  vf_loss_coeff: 1.0
+  gain: 0.01
+  entropy_coeff: 0.01
+  vf_clip_param: 10.0
+  batch_mode: truncate_episodes
+  min_lr_schedule: 1.0e-11
+  lr_schedule_steps: 1000000
+  hidden:
+  - 256
+  - 256
+  activation: tanh
+  opp_action_in_cc: false
+  radius_pi: 1
+  rollout_steps: 150
+  sgd_minibatch_size: 1500
+  owner_passes: num_agents
+  normalize_advantages: true
+  optimization_protocol: fixed_budget_monitor_only
+  optimizer_early_stopping: false
+  algorithm: happo
+  profile_mode: source_profile
+  config_version: 2
+  formal_training_authorized: true
+implementation: {}

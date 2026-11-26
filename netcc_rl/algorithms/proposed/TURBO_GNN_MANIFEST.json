@@ -1,0 +1,8 @@
+{
+  "repository": "https://github.com/yandex-research/On-Efficient-Scaling-Of-GNNs",
+  "commit": "e26d564701c64545ae6eef6b44b2fc95dc36a93e",
+  "version": "0.1.0rc4",
+  "patch": "scripts/turbo-sm75.patch",
+  "patch_sha256": "0a8de6a1eb7433d6eb92a7d20359e0e367d97e7092df125245720c7fb7ca30e2",
+  "scope": "GATv2 float32 first-order autograd; CUDA SM75 tested; head widths 32/64/128/256; no attention dropout or AMP; undirected CUDA Graph allocator scratch"
+}
