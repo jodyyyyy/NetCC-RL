@@ -1,8 +1,8 @@
 # Results
 
-Version 0.1.0 ships code and environment assets. Experiment artifacts will be distributed separately when available.
+The [2026-11-26 seed 0 snapshot](seed0-20261126/README.md) contains final evaluation returns for completed ablations and seven baselines on SIS, Kuramoto and Swing, plus an independent evaluation of E0–E7.
 
-Each future archive should record the source version or commit, configuration SHA-256, environment snapshot SHA-256, training seed, real-step count, evaluation settings, and content hashes for checkpoint, metrics and evaluation files. Keep the protocol identifier on each row. The comparison CLI records `algorithm`, `environment` and `protocol` in evaluation and metric rows. Evaluation records include the episode seed, return, transition count and episode boundary. The original and unified SIS CMAT profiles have distinct protocol identifiers.
+Record the source version, configuration and environment hashes, training seed, real-step budget, evaluation settings and artifact hashes when adding new run archives. Keep the protocol identifier on each run. The comparison CLI records `algorithm`, `environment` and `protocol` in evaluation and metric rows. Evaluation records include the episode seed, return, transition count and episode boundary.
 
 For ablation curves, place runs in directories named `<environment>-<arm>-seed0` under a shared output directory. Run the code-only analysis and TensorBoard export as follows.
 

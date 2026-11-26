@@ -6,7 +6,7 @@
 
 - [中文代码与文件指南](docs/code-guide.md)：每类文件的用途、修改算法和实验的入口。
 - [详细复现协议（英文）](docs/reproduction.md)：训练预算、算法更新频率、评估和 checkpoint 兼容。
-- [实验结果说明](results/README.md)：如何保存、分析和补充训练数据。
+- [实验结果说明](results/README.md)：当前结果快照及后续数据的保存与分析方式。
 - [第三方来源及版权](THIRD_PARTY_NOTICES.md)：必须保留的来源与许可说明。
 
 ## 1. 安装（Linux，Python 3.10）
@@ -86,7 +86,7 @@ GPU 加速及跨运行时恢复的完整验收尚未完成。正式配置和已�
 
 ## 5. 数据与引用
 
-本仓库暂不包含训练数据、模型权重或未发表论文。后续按 [results/README.md](results/README.md) 记录配置、源码版本、seed、协议和数据哈希。单训练 seed 的实验只支持描述性比较。以下为现有算法参考，不代表 NetCC-RL 论文已发表。
+已完成实验的评估结果见 [结果目录](results/README.md)。本仓库存放评估汇总、逐回合回报及消融曲线。模型权重和未发表论文待后续发布。单训练 seed 的实验只支持描述性比较。以下为现有算法参考。
 
 - Hansen, Su and Wang. [TD-MPC2](https://arxiv.org/abs/2310.16828).
 - Brody, Alon and Yahav. [How Attentive are Graph Attention Networks?](https://arxiv.org/abs/2105.14491).
