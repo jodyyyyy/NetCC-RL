@@ -3,10 +3,14 @@
 import argparse
 import gzip
 import json
+import shutil
 from pathlib import Path
 
 from netcc_rl.cli import read_config
-from netcc_rl.comparison_output import append_json, checkpoint_index, evaluation, sha256, training_row, write_json
+from netcc_rl.comparison_output import (
+    append_json, checkpoint_index, evaluation, progress_record,
+    runtime_record, sha256, training_row, write_json,
+)
 
 
 def episodes(rows):
@@ -31,8 +35,21 @@ def main():
                       snapshot_sha256=config["snapshot_sha256"])
     if normalized != config:
         raise ValueError("Run and target configuration differ")
+    runtime = json.loads((args.run / "runtime.json").read_text())
+    progress = json.loads((args.run / "progress.json").read_text())
+    if (runtime["config"] != saved or progress["phase"] != "completed"
+            or progress["real_steps"] != runtime["budget"]):
+        raise ValueError("Expected a completed run with matching runtime configuration")
     args.output.mkdir(parents=True, exist_ok=False)
-    write_json(args.output/"config.json",config)
+    write_json(args.output / "config.json", config)
+    write_json(args.output / "runtime.json", runtime_record(
+        config, runtime["seed"], runtime["device"], runtime["torch"], runtime["budget"], runtime["smoke"]
+    ))
+    write_json(args.output / "progress.json", progress_record(
+        config, progress["phase"], progress["real_steps"], progress["budget"],
+        learner_updates=progress["optimizer_steps"], gathered=progress["gathered"],
+        wall_seconds=progress["wall_seconds"], updated_at=progress["updated_at"]
+    ))
     raw_metrics = args.run/"learner-metrics.jsonl.gz"
     if raw_metrics.exists():
         with gzip.open(raw_metrics, "rt") as stream:
@@ -50,13 +67,12 @@ def main():
             if row["final"]:
                 write_json(args.output/"evaluation.json",data)
     if (args.run/"final.pt").is_file():
-        import shutil
         source = args.run/"final.pt"
         destination = args.output/"final.pt"
         shutil.copyfile(source,destination)
-        checkpoint_index(config,args.output,destination,config["steps"],config["seed"])
         if sha256(source)!=sha256(destination):
             raise ValueError("Checkpoint copied with different contents")
+        checkpoint_index(config, args.output, destination, progress["real_steps"], runtime["seed"])
 
 
 if __name__ == "__main__":
