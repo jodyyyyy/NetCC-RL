@@ -1,6 +1,6 @@
 # NetCC-RL: Reinforcement Learning for Continuous Control of Complex Networks
 
-面向复杂网络连续控制的强化学习研究代码。当前用于课题组内部研究、算法复现和后续开发；论文及完整实验数据尚未发布。请保持仓库私有，未经权利人确认不要公开或转发第三方源码及拓扑数据。
+面向复杂网络连续控制的强化学习研究代码。
 
 ## 快速导航
 
@@ -52,8 +52,6 @@ python -m netcc_rl.train --config configs/ablation/sis/E8.yaml --device cuda:0 -
 | Kuramoto | 100 | 50 |
 | SIS | 100 | 50 |
 | Swing (IEEE39-derived core38) | 38 | 19 |
-
-SIS 共同协议：动作 [-1,1]，干预强度 (a+1)/2，控制成本系数 0.1。历史 CMAT SIS 使用 [-1,0.2] 和零成本，单独保留在 `configs/historical/`，不能与共同协议直接比较。
 
 36 组消融由以下 12 个 arm × 三环境组成：
 
