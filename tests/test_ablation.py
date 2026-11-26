@@ -485,6 +485,8 @@ def test_frozen_base_hash_and_same_shape_environment_checkpoint_rejection(monkey
     kuramoto = NetCCAgent(resolved("kuramoto", "E0"))
     # Same N/Z/action/Q dimensions must not bypass the environment identity.
     checkpoint = dict(
+        format_version=5,
+        kind="model_weights",
         metadata=actor_metadata(sis.cfg),
         config=deepcopy(vars(sis.cfg)),
         model=sis.model.state_dict(),
