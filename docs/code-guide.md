@@ -1,6 +1,6 @@
 # NetCC-RL 中文代码与文件指南
 
-本指南供后续研究和课题组成员接手使用。建议先运行 README 的短测，再按任务阅读源码。不要为了目录简洁删除冻结配置、拓扑、依赖或兼容代码。
+本指南供后续研究和代码开发使用。建议先运行 README 的短测，再按任务阅读源码。不要为了目录简洁删除冻结配置、拓扑、依赖或兼容代码。
 
 ## 1. 根目录：日常从哪里开始
 
@@ -13,14 +13,12 @@
 | scripts/ | 统计、TensorBoard、旧数据与权重转换 | 按需 |
 | tests/ | 正确性回归测试 | 改代码后 |
 | docs/ | 中文导航及详细复现协议 | 按需 |
-| results/README.md | 未来结果归档格式，当前不是实际结果 | 保存数据时 |
+| results/README.md | 当前实验结果及归档格式 | 保存数据时 |
 | pyproject.toml | pip 安装、依赖、包资源和版本定义 | 通常不改 |
 | constraints.txt | 复现依赖版本约束 | 安装时 |
 | MANIFEST.in | 源码发行包应包含的配置、文档和脚本 | 打包时 |
 | .gitignore | Git 忽略规则 | 通常不改 |
-| LICENSE / THIRD_PARTY_NOTICES.md | 内部使用状态及第三方版权 | 保留 |
 
-暂未启用的 GitHub Actions 模板和缺少作者的 CITATION.cff 已从工作树移除；旧版本仍可从 Git 历史找回。现在使用本地 pytest；论文作者及正式许可确定后再补完整引用文件。不要删除第三方许可。
 
 ## 2. 公共入口与配置
 
@@ -53,7 +51,6 @@
 | learning/learner_update.py / learner_runtime.py / compile.py | 更新顺序、CUDA Graph 和 TorchInductor |
 | replay/ | 单步 Replay、采样、批量采集 |
 | utils/ | Gaussian 与数值运算、初始化、预算、日志与计时 |
-| LICENSE.TDMPC2 | 上游许可 |
 
 修改 Encoder 时，从 `models/graph_networks.py` 和 `ablation/variants.py` 追踪入口。共享 Actor 在 `models/graph_networks.py`，全局 Actor 在 `ablation/variants.py`。D1 loss 和目标网络更新从 `agent.py` 与 `learning/learner_update.py` 开始，D0 从 `ablation/model_free.py` 开始。
 
@@ -67,7 +64,7 @@
 | MAT / JointPPO | joint_policy.py、joint_train.py |
 | CMAT | cmat/run.py、cmat/joint_policy.py、cmat/joint_train.py、cmat/gpu_batch.py |
 
-七个非 CMAT 算法由 baselines/run.py 组织训练；CMAT 使用独立 runner。共享目录不是重复算法：environment.py/environment_profile.py 负责环境绑定，phase_features.py 处理相位特征，neighborhoods.py 处理局部观测范围，trajectories.py、batched.py、runtime.py、profiling.py 等支持数据、执行和诊断；registry.py 定义该 runner 支持的算法；configs/*.json 保存既有正式 profile；vendor/ 和 licenses/ 保存实际使用的上游代码、来源与许可。
+七个非 CMAT 算法由 baselines/run.py 组织训练；CMAT 使用独立 runner。共享目录不是重复算法：environment.py/environment_profile.py 负责环境绑定，phase_features.py 处理相位特征，neighborhoods.py 处理局部观测范围，trajectories.py、batched.py、runtime.py、profiling.py 等支持数据、执行和诊断；registry.py 定义该 runner 支持的算法；configs/*.json 保存既有正式 profile；vendor/ 保存实际使用的上游代码。
 
 CMAT 子目录中的 task_adapter.py、task_joint.py、phase_features.py 等是其独立适配链，不能只因名称和外层相似就删除或合并。各算法的优化更新频率和信息范围不相同。
 
@@ -78,7 +75,6 @@ CMAT 子目录中的 task_adapter.py、task_joint.py、phase_features.py 等是�
 - mpcsc/dynamics/kuramoto.py、sis.py：分别是两种物理动力学；random_streams.py 为随机流支持。
 - graph/：Swing 及图拓扑、冻结环境读取；data/ 中有三环境的冻结快照、CMAT 来源数据和 core38 拓扑。
 - 哈希命名的 JSON 与 index.json 是复现实验资产，不是缓存或垃圾文件；修改可能改变 checkpoint 身份。
-- LICENSE.MPCSC 等版权文件必须保留。
 
 ## 6. 分析脚本
 
@@ -111,4 +107,4 @@ python -m netcc_rl.evaluate --config configs/comparison/sis-ppo.yaml \
 
 test_ablation.py 检查消融配置、模型及环境/学习合同；test_comparison.py 检查对比接口；test_acceleration.py 检查加速路径。日常先跑 CPU pytest，再根据设备情况运行 GPU 专项。尚未完成的 GPU 验收不应被描述为已通过。
 
-结果默认写入 runs/，不要把 checkpoint、大日志和 TensorBoard 事件直接提交到 Git。使用新目录、记录 commit、config、seed 和环境协议。当前论文未发表；仓库供内部协作，不能视作已取得第三方公开再分发权或已采用开源许可证。
+结果默认写入 runs/，不要把 checkpoint、大日志和 TensorBoard 事件直接提交到 Git。使用新目录、记录 commit、config、seed 和环境协议。

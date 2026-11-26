@@ -23,3 +23,12 @@ Proposed checkpoints restore model weights. CMAT writes a separate `last-good.pt
 ## Execution modes
 
 Formal proposed configurations bind PyG 2.6.1 with the explicit FP32 compile and CUDA Graph paths. CPU and eager CUDA runs are available separately. The former Turbo-GNN backend was removed. Configurations that request it explicitly fail with a clear error. Frozen PyG COO layouts, physical snapshots, and driver order are preserved.
+
+## Implementation sources
+
+- TD-MPC2 provides the world-model and value-learning foundations ([source](https://github.com/nicklashansen/tdmpc2/tree/e9f59321933cbc8e11a002b842adc7d4ffae8ff1)).
+- MPCSC provides the Kuramoto and SIS dynamics and task presets ([source](https://github.com/Muyun1996/MPCSC/tree/e4e0cee2033cff57a1eef87c4f54b6f5394aede4)).
+- MAPPO includes a subset of [on-policy](https://github.com/marlbenchmark/on-policy/tree/de66d7a4b23fac2513f56f96f73b3f5cb96695ac); its vendor manifest records the original fingerprints. HAPPO adapts the objective and update logic from [MARLlib](https://github.com/Replicable-MARL/MARLlib).
+- PPO, SAC and TD3 use [Stable-Baselines3 2.4.1](https://github.com/DLR-RM/stable-baselines3/tree/v2.4.1). GATv2 uses [PyTorch Geometric 2.6.1](https://github.com/pyg-team/pytorch_geometric/tree/2.6.1).
+- MAT and CMAT are continuous-control adaptations of the methods cited in the README.
+- Swing uses the frozen core38 topology derived from [MATPOWER case39](https://github.com/MATPOWER/matpower/blob/80b6e16f760f58721ad31221c7287c28259cd4ad/data/case39.m). The topology asset records the source revision and SHA-256.

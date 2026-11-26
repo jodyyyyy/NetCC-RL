@@ -7,7 +7,6 @@
 - [中文代码与文件指南](docs/code-guide.md)：每类文件的用途、修改算法和实验的入口。
 - [详细复现协议（英文）](docs/reproduction.md)：训练预算、算法更新频率、评估和 checkpoint 兼容。
 - [实验结果说明](results/README.md)：当前结果快照及后续数据的保存与分析方式。
-- [第三方来源及版权](THIRD_PARTY_NOTICES.md)：必须保留的来源与许可说明。
 
 ## 1. 安装（Linux，Python 3.10）
 
@@ -86,10 +85,9 @@ GPU 加速及跨运行时恢复的完整验收尚未完成。正式配置和已�
 
 ## 5. 数据与引用
 
-已完成实验的评估结果见 [结果目录](results/README.md)。本仓库存放评估汇总、逐回合回报及消融曲线。模型权重和未发表论文待后续发布。单训练 seed 的实验只支持描述性比较。以下为现有算法参考。
+已完成实验的评估结果见 [结果目录](results/README.md)。本仓库存放评估汇总、逐回合回报及消融曲线。模型权重暂未包含。单训练 seed 的实验只支持描述性比较。以下为现有算法参考。
 
 - Hansen, Su and Wang. [TD-MPC2](https://arxiv.org/abs/2310.16828).
 - Brody, Alon and Yahav. [How Attentive are Graph Attention Networks?](https://arxiv.org/abs/2105.14491).
 - Schulman et al. [PPO](https://arxiv.org/abs/1707.06347). Haarnoja et al. [SAC](https://arxiv.org/abs/1801.01290). Fujimoto, van Hoof and Meger. [TD3](https://arxiv.org/abs/1802.09477).
 - Yu et al. [MAPPO](https://arxiv.org/abs/2103.01955). Kuba et al. [HAPPO](https://arxiv.org/abs/2109.11251). Wen et al. [MAT](https://arxiv.org/abs/2205.14953). Zhao et al. [CMAT](https://arxiv.org/abs/2604.13472).
-- The upstream code and data attributions are in [Third-party notices](THIRD_PARTY_NOTICES.md).
