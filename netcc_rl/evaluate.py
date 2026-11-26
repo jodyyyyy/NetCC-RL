@@ -43,7 +43,7 @@ def main():
             finally:
                 agent.env.close()
     else:
-        from .algorithms.proposed import TDMPC2
+        from .algorithms.proposed import NetCCAgent
         from .algorithms.proposed.config import load_config
         from .algorithms.proposed.runner import evaluate, set_seed
         from .environments import make_env
@@ -58,7 +58,7 @@ def main():
         set_seed(cfg.seed, cfg.torch_threads)
         env = make_env(cfg)
         try:
-            agent = TDMPC2(cfg)
+            agent = NetCCAgent(cfg)
             load_report = agent.load(args.checkpoint)
             result = {**evaluate(agent, cfg), "checkpoint_load": load_report}
         finally:

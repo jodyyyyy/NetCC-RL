@@ -6,7 +6,9 @@ from collections.abc import Mapping, MutableMapping
 from pathlib import Path
 from types import SimpleNamespace
 import yaml
-from .common.adaptive_architecture import PROFILE as ADAPTIVE_PROFILE
+from netcc_rl.compat.ablation import normalize_record
+from netcc_rl.yaml_io import read_yaml
+from netcc_rl.algorithms.proposed.models.architecture import PROFILE as ADAPTIVE_PROFILE
 
 GAUSSIAN_POLICY_CONTRACT = "tanh_affine_joint_density_arctan_std_mean_action_entropy"
 MAINLINE_CONTRACT = "gaussian_single_step_native_states_g2_v1"
@@ -27,7 +29,7 @@ def resolve_gaussian_bounds(cfg):
 
 
 def resolve_model_widths(cfg, observation_shape):
-    from .common.adaptive_architecture import resolve
+    from netcc_rl.algorithms.proposed.models.architecture import resolve
 
     if isinstance(cfg, Mapping):
         temporary = SimpleNamespace(**cfg)
@@ -44,6 +46,8 @@ def validate(cfg):
     if not supported_task(cfg.task):
         raise ValueError("main registry supports only Kuramoto, SIS and Swing")
     resolve_gaussian_bounds(cfg)
+    if cfg.graph_backend != "pyg":
+        raise ValueError(f"Unsupported graph_backend {cfg.graph_backend!r}; expected pyg")
     required = dict(
         actor_type="gaussian",
         actor_architecture="shared_native_state",
@@ -52,7 +56,7 @@ def validate(cfg):
         graph_num_layers=2,
         graph_num_heads=4,
         graph_global_readout="mean_max",
-        exp016_arm="G2",
+        graph_readout_variant="mean_max",
         dynamics_type="global_mlp",
         horizon=3,
         num_q=5,
@@ -63,7 +67,7 @@ def validate(cfg):
         multitask=False,
         mpc=False,
     )
-    if getattr(cfg, "exp017_arm", None) is not None:
+    if getattr(cfg, "ablation_arm", None) is not None:
         from netcc_rl.matrix import validate as validate_matrix
 
         validate_matrix(cfg)
@@ -138,47 +142,17 @@ def validate(cfg):
         raise ValueError("invalid value bins/SimNorm grouping")
     if cfg.eval_policy not in {"stochastic", "gaussian_mean"}:
         raise ValueError("invalid eval_policy")
-    if cfg.compile and cfg.learner_cuda_graphs and not getattr(cfg, "exp017_arm", None):
+    if cfg.compile and cfg.learner_cuda_graphs and not getattr(cfg, "ablation_arm", None):
         raise ValueError("compile and CUDA Graph learner are mutually exclusive")
     if hasattr(cfg, "obs_shape"):
-        from .common.adaptive_architecture import validate_identity
+        from netcc_rl.algorithms.proposed.models.architecture import validate_identity
 
         validate_identity(cfg)
-    from .common.utd import validate_schedule
-    from .common.vector_runner import validate_collector
+    from netcc_rl.algorithms.proposed.utils.utd import validate_schedule
+    from netcc_rl.algorithms.proposed.replay.vector_runner import validate_collector
 
     validate_schedule(cfg)
     validate_collector(cfg)
-    if cfg.graph_backend not in {"pyg", "turbo"}:
-        raise ValueError("graph_backend must be pyg or turbo")
-    if cfg.graph_backend == "turbo":
-        if cfg.state_encoder_type not in {"gatv2_full", "gatv2_prior"}:
-            raise ValueError("Turbo backend requires a GATv2 encoder")
-        if cfg.graph_attention_dropout != 0:
-            raise ValueError("Turbo GATv2 does not support attention dropout")
-        if cfg.enc_dim // cfg.graph_num_heads not in {32, 64, 128, 256}:
-            raise ValueError("Turbo GATv2 head width must be 32, 64, 128, or 256")
-    for name in (
-        "turbo_symmetric_csr",
-        "turbo_fused_projection",
-        "turbo_save_output_for_backward",
-    ):
-        if type(getattr(cfg, name, False)) is not bool:
-            raise ValueError(f"{name} must be boolean")
-    for name, allowed, default in (
-        ("grad_A_reduce_row_chunk_size", {256, 512, 1024, 2048}, 512),
-        ("forward_light_warps", {1, 2, 4}, 1),
-        ("backward_light_warps", {1, 2, 4}, 1),
-        ("forward_heavy_warps", {8, 16, 32}, 8),
-        ("backward_heavy_warps", {8, 16, 32}, 8),
-    ):
-        value = getattr(cfg, "turbo_" + name, default)
-        if type(value) is not int or value not in allowed:
-            raise ValueError(f"invalid turbo_{name}")
-    for name in ("turbo_forward_quantile", "turbo_backward_quantile"):
-        value = getattr(cfg, name, 0.99)
-        if isinstance(value, bool) or value not in {-1, 0.90, 0.95, 0.99}:
-            raise ValueError(f"invalid {name}")
     if type(cfg.graph_batch_size) is not int or cfg.graph_batch_size < 1:
         raise ValueError("graph_batch_size must be a positive integer")
     if type(cfg.graph_checkpoint) is not bool:
@@ -194,8 +168,9 @@ def validate(cfg):
 def load_config(path=None, overrides=(), *, profile=None, ablation=None):
     data = yaml.safe_load(Path(__file__).with_name("config.yaml").read_text())
     if path or ablation:
-        supplied = (yaml.safe_load(Path(path).read_text()) if path else
-                    dict(zip(("exp017_environment", "exp017_arm"), ablation)))
+        supplied = (read_yaml(Path(path)) if path else
+                    dict(zip(("ablation_environment", "ablation_arm"), ablation)))
+        supplied = normalize_record(supplied)
         metadata = {
             "bin_size",
             "obs_shape",
@@ -203,16 +178,16 @@ def load_config(path=None, overrides=(), *, profile=None, ablation=None):
             "episode_length",
             "seed_steps",
         }
-        if isinstance(supplied, dict) and "exp017_environment" in supplied:
+        if isinstance(supplied, dict) and "ablation_environment" in supplied:
             from netcc_rl.matrix import expand
 
-            if "exp017_factors" not in supplied:
+            if "ablation_factors" not in supplied:
                 supplied = expand(supplied)
             metadata |= {
-                "exp017_environment",
-                "exp017_arm",
-                "exp017_factors",
-                "exp017_base_sha256",
+                "ablation_environment",
+                "ablation_arm",
+                "ablation_factors",
+                "base_config_sha256",
             }
         if not isinstance(supplied, dict) or set(supplied) - set(data) - metadata:
             raise ValueError(
@@ -249,7 +224,7 @@ def actor_metadata(cfg):
         "graph_num_layers",
         "graph_num_heads",
         "graph_global_readout",
-        "exp016_arm",
+        "graph_readout_variant",
         "graph_backend",
         "graph_node_dim",
         "latent_dim",
@@ -282,26 +257,26 @@ def actor_metadata(cfg):
             discount_episode_length=cfg.episode_length,
             effective_gamma=episode_discount(cfg, cfg.episode_length),
         )
-    if getattr(cfg, "exp017_arm", None):
-        from .common.adaptive_architecture import digest
+    if getattr(cfg, "ablation_arm", None):
+        from netcc_rl.algorithms.proposed.models.architecture import digest
 
         result.update(
-            exp017_arm=cfg.exp017_arm,
-            exp017_environment=cfg.exp017_environment,
-            exp017_factors=cfg.exp017_factors,
-            exp017_identity_sha256=digest(cfg.architecture_resolved),
+            ablation_arm=cfg.ablation_arm,
+            ablation_environment=cfg.ablation_environment,
+            ablation_factors=cfg.ablation_factors,
+            ablation_identity_sha256=digest(cfg.architecture_resolved),
             dynamics_enabled=cfg.dynamics_type != "disabled",
             model_horizon=cfg.horizon if cfg.dynamics_type != "disabled" else None,
             replay_horizon=cfg.horizon,
-            mainline_contract="exp017_factorial_gaussian_v1",
+            mainline_contract="ablation_gaussian_v2",
         )
     return result
 
 
 def experiment_name(cfg):
-    if getattr(cfg, "exp017_arm", None):
-        return f"exp017_{cfg.exp017_environment}_{cfg.exp017_arm}"
-    return f"gaussian_K1_{cfg.model_width_profile}_G2_z{cfg.latent_dim}_h{cfg.horizon}"
+    if getattr(cfg, "ablation_arm", None):
+        return f"ablation_{cfg.ablation_environment}_{cfg.ablation_arm}"
+    return f"gaussian_K1_{cfg.model_width_profile}_mean_max_z{cfg.latent_dim}_h{cfg.horizon}"
 
 
 def parse_args(description, *, evaluation=False):

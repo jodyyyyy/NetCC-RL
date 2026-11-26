@@ -1,2 +1,0 @@
-# Preserve context lines and the upstream compatibility patch SHA-256.
-scripts/turbo-sm75.patch -whitespace

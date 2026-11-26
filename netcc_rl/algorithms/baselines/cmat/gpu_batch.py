@@ -1,4 +1,4 @@
-"""Real device-native collectors for the three continuous EXP-016 tasks.
+"""Real device-native collectors for the three continuous adaptive graph tasks.
 
 The simulator consumes canonical environment actions, never Gaussian latents.
 SB3's NumPy VecEnv boundary is explicit; its physics still executes on CUDA.

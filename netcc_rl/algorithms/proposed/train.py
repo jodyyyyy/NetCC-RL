@@ -4,7 +4,7 @@ from pathlib import Path
 
 from netcc_rl.environments import make_env
 
-from . import TDMPC2
+from . import NetCCAgent
 from .config import experiment_name, load_config, parse_args, validate_experiment_output
 from .runner import set_seed, train
 
@@ -19,7 +19,7 @@ def main():
         if cfg.work_dir is None:
             cfg.work_dir = str(Path(__file__).resolve().parents[1] / 'runs' /
                                cfg.task / experiment_name(cfg) / f'seed_{cfg.seed}')
-        agent = TDMPC2(cfg)
+        agent = NetCCAgent(cfg)
         train(agent, env, cfg)
     finally:
         env.close()

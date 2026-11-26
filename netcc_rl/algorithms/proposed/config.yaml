@@ -11,7 +11,7 @@ mpcsc_task_source: null
 obs: state
 multitask: false
 task_dim: 0
-model_width_profile: exp016_adaptive_v1
+model_width_profile: adaptive_width_v1
 actor_architecture: shared_native_state
 state_encoder_type: gatv2_prior
 graph_num_layers: 2
@@ -21,16 +21,6 @@ graph_backend: pyg
 graph_attention_dropout: 0.0
 graph_batch_size: 8
 graph_checkpoint: true
-turbo_symmetric_csr: false
-turbo_fused_projection: false
-turbo_save_output_for_backward: false
-turbo_grad_A_reduce_row_chunk_size: 512
-turbo_forward_light_warps: 1
-turbo_forward_heavy_warps: 8
-turbo_backward_light_warps: 1
-turbo_backward_heavy_warps: 8
-turbo_forward_quantile: 0.99
-turbo_backward_quantile: 0.99
 graph_node_dim: 64
 dynamics_type: global_mlp
 learner_cuda_graphs: false
@@ -88,7 +78,7 @@ num_q: 5
 dropout: 0.01
 simnorm_dim: 8
 num_channels: 32
-exp016_arm: G2
+graph_readout_variant: mean_max
 graph_global_readout: mean_max
 architecture_resolved: null
 retain_best_checkpoint: false

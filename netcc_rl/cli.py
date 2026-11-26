@@ -3,7 +3,8 @@
 import argparse
 from pathlib import Path
 
-import yaml
+from .yaml_io import read_yaml
+from .compat.ablation import normalize_record
 
 
 def parser(description):
@@ -15,7 +16,7 @@ def parser(description):
 
 
 def read_config(path):
-    config = yaml.safe_load(path.read_text())
+    config = read_yaml(path)
     if not isinstance(config, dict):
         raise ValueError("Expected a YAML configuration mapping")
     if config.get("kind") == "comparison":
@@ -28,6 +29,11 @@ def read_config(path):
             raise ValueError("Unknown comparison algorithm")
         if config.get("environment") not in {"kuramoto", "sis", "swing"} or config.get("steps") != 1_000_000:
             raise ValueError("Invalid comparison environment or formal budget")
+        if config["algorithm"] == "cmat":
+            from .compat.comparison import cmat_config
+            config = cmat_config(config)
+    else:
+        config = normalize_record(config)
     return config
 
 

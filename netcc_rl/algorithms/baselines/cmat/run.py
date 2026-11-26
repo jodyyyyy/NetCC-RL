@@ -214,7 +214,9 @@ def train(config, output, device, seed, smoke, *, resume=False):
 def evaluate_checkpoint(config, checkpoint, device, episodes, seed_start):
     adapter, learner = build(config, device)
     saved = torch.load(checkpoint, map_location=device, weights_only=False)
-    original = saved["config"]
+    from netcc_rl.compat.comparison import cmat_config
+
+    original = cmat_config(saved["config"])
     if "schema_version" not in original:
         implementation = config["implementation"]
         legacy = dict(config)

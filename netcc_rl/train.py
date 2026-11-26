@@ -28,7 +28,7 @@ def main():
                                          args.smoke, **kwargs)
         return
 
-    from .algorithms.proposed import TDMPC2
+    from .algorithms.proposed import NetCCAgent
     from .algorithms.proposed.config import load_config
     from .algorithms.proposed.runner import set_seed, train
     from .environments import make_env
@@ -47,7 +47,7 @@ def main():
     set_seed(cfg.seed, cfg.torch_threads)
     env = make_env(cfg)
     try:
-        train(TDMPC2(cfg), env, cfg)
+        train(NetCCAgent(cfg), env, cfg)
     finally:
         env.close()
 

@@ -2,9 +2,9 @@
 
 from .config import TASKS, EnvironmentConfig, load_config
 from .env import MPCSCEnv
-from .tdmpc2 import TDMPC2NumpyAdapter, TDMPC2TensorAdapter, make_env, make_gym_env
+from netcc_rl.environments.mpcsc.adapter import NumpyEnvAdapter, TensorEnvAdapter, make_env, make_gym_env
 
 __all__ = [
     "TASKS", "EnvironmentConfig", "load_config", "MPCSCEnv",
-    "TDMPC2NumpyAdapter", "TDMPC2TensorAdapter", "make_env", "make_gym_env",
+    "NumpyEnvAdapter", "TensorEnvAdapter", "make_env", "make_gym_env",
 ]

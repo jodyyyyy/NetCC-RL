@@ -1,5 +1,5 @@
 """Gaussian actor and TD-MPC2-style latent learner."""
 
-from .tdmpc2 import TDMPC2
+from netcc_rl.algorithms.proposed.agent import NetCCAgent
 
-__all__ = ["TDMPC2"]
+__all__ = ["NetCCAgent"]

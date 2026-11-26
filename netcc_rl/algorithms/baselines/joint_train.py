@@ -8,7 +8,7 @@ import numpy as np
 import torch
 from .environment import make_env
 from .joint_policy import JointPolicy, surrogate
-from .roster import TRANSFORMERS
+from netcc_rl.algorithms.baselines.registry import TRANSFORMERS
 
 
 def load_profile(algorithm, smoke=False):

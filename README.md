@@ -17,7 +17,7 @@
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install --index-url https://download.pytorch.org/whl/cpu --extra-index-url https://pypi.org/simple 'torch==2.4.0+cpu'
-python -m pip install -c constraints-training.txt '.[baselines,analysis,test]'
+python -m pip install -c constraints.txt '.[baselines,analysis,test]'
 ```
 
 `baselines` 安装 SB3（PPO/SAC/TD3）；`analysis` 安装绘图和 TensorBoard；`test` 安装 pytest。其余算法的必要依赖在基础包中。以下命令从仓库根目录执行。

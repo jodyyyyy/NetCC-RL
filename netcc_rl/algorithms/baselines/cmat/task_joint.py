@@ -77,7 +77,10 @@ class TaskJointLearner(Learner):
         if self.algorithm=='cmat':state['consensus_backend']=self.policy.consensus_backend
         return state
     def restore(self,state):
-        if state['task_identity']!=self.adapter.identity:raise ValueError('task/checkpoint identity differs')
+        from netcc_rl.compat.comparison import adapter_identity
+
+        if adapter_identity(state['task_identity']) != self.adapter.identity:
+            raise ValueError('task/checkpoint identity differs')
         if self.algorithm=='cmat' and 'consensus_backend' in state and state['consensus_backend']!=self.policy.consensus_backend:
             raise ValueError('CMAT consensus backend differs; exact continuation is not cross-backend')
         super().restore(state)

@@ -11,7 +11,7 @@ from torch import nn
 from torch.distributions import Normal
 from .environment import LocalGraph
 from .phase_features import phase_features, NODE_COUNT, NODE_FEATURES, RAW_DIM
-from .roster import TRANSFORMERS
+from netcc_rl.algorithms.baselines.registry import TRANSFORMERS
 
 
 class Compression(nn.Module):

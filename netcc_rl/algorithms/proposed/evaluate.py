@@ -5,7 +5,7 @@ import json
 
 from netcc_rl.environments import make_env
 
-from . import TDMPC2
+from . import NetCCAgent
 from .config import load_config, parse_args
 from .runner import evaluate, set_seed, write_json
 
@@ -23,7 +23,7 @@ def main():
         if saved_dims[0] is not None and (saved_dims[0] != cfg.action_dim or
                 tuple(saved_dims[1]['state']) != env.observation_space.shape):
             raise ValueError('task dimensions differ from the saved training configuration')
-        agent = TDMPC2(cfg)
+        agent = NetCCAgent(cfg)
         report = agent.load(args.checkpoint)
         result = {**evaluate(agent, cfg), 'checkpoint_load': report}
         if args.output:
