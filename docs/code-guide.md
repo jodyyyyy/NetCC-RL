@@ -9,7 +9,6 @@
 | README.md | 安装、最小运行例子、实验范围 | 是 |
 | configs/ablation/ | 三环境各 E0–E11；每个 YAML 是 arm 选择器 | 是 |
 | configs/comparison/ | 八算法 × 三环境完整比较 profile | 是 |
-| configs/historical/sis-cmat.yaml | 原 CMAT SIS 的非共同协议，供旧结果复现 | 仅旧结果 |
 | netcc_rl/ | Python 算法与环境实现 | 改算法时 |
 | scripts/ | 统计、TensorBoard、旧数据与权重转换 | 按需 |
 | tests/ | 正确性回归测试 | 改代码后 |
@@ -95,7 +94,7 @@ CMAT 子目录中的 task_adapter.py、task_joint.py、phase_features.py 等是�
 
 `compat/ablation.py` 负责 v4 权重和旧配置。新权重写 v5，模型参数键和张量形状沿用原版。旧配置的环境/arm、因子、基础配置摘要和架构摘要按明确映射读取；在加载模型前校验摘要、环境快照、模型尺寸和参数键。v4 和 v5 加载均仅恢复模型权重。
 
-历史 PPO/SAC/TD3 使用原运行目录的 `config.json` 校验环境、执行器、配置和预算。兼容层仅替换归档中已知的旧 PhaseExtractor 路径，保留归档里的策略参数。MAPPO 的正式权重可能记录最后一个 100 步的部分回合，兼容层只在预算确实推出该长度时识别它。CMAT 映射旧适配器版本字段并继续检查完整适配器身份。旧 SIS 协议迁移使用 `configs/historical/sis-cmat.yaml`。
+历史 PPO/SAC/TD3 使用原运行目录的 `config.json` 校验环境、执行器、配置和预算。兼容层仅替换归档中已知的旧 PhaseExtractor 路径，保留归档里的策略参数。MAPPO 的正式权重可能记录最后一个 100 步的部分回合，兼容层只在预算确实推出该长度时识别它。CMAT 映射旧适配器版本字段并继续检查完整适配器身份。旧 SIS 协议已不列入实验配置；如需复核旧权重，请提供原运行匹配的配置。`tests/fixtures/legacy_cmat_sis.yaml` 仅用于历史兼容性回归，不属于正式实验矩阵。
 
 ```bash
 python -m netcc_rl.evaluate --config configs/ablation/sis/E0.yaml \

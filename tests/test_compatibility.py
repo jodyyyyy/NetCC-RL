@@ -37,7 +37,7 @@ def test_conflicting_fields_and_removed_backend_are_rejected(tmp_path, text, mat
 
 
 def test_cmat_legacy_schema_migration_preserves_protocol():
-    config = read_config(Path(__file__).resolve().parents[1] / "configs/historical/sis-cmat.yaml")
+    config = read_config(Path(__file__).resolve().parent / "fixtures/legacy_cmat_sis.yaml")
     legacy = deepcopy(config)
     legacy["implementation"]["adapter_identity"]["version"] = "exp015_task_adapter_v1"
     assert cmat_config(legacy) == config

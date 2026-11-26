@@ -28,7 +28,7 @@ def test_config_catalog_and_common_schema():
 def test_unified_cmat_sis_protocol_and_cost_once():
     selected = read_config(ROOT/"comparison/sis-cmat.yaml")
     primary = TaskAdapter(selected)
-    old = TaskAdapter(read_config(ROOT/"historical/sis-cmat.yaml"))
+    old = TaskAdapter(read_config(Path(__file__).resolve().parent / "fixtures/legacy_cmat_sis.yaml"))
     assert primary.controls == old.controls
     assert primary.snapshot["reward_variant"] == "sis_control_cost"
     assert old.snapshot["reward_variant"] != primary.snapshot["reward_variant"]
