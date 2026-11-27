@@ -1,6 +1,6 @@
 # Results
 
-The [2026-11-26 seed 0 snapshot](seed0-20261126/README.md) contains final evaluation returns for completed ablations and seven baselines on SIS, Kuramoto and Swing, plus an independent evaluation of E0–E7.
+The [2026-11-27 seed 0 snapshot](seed0-20261127/README.md) contains the latest ablation and baseline results for SIS, Kuramoto and Swing, plus an independent evaluation of E0–E7. The [2026-11-26 snapshot](seed0-20261126/README.md) is available for reference.
 
 Record the source version, configuration and environment hashes, training seed, real-step budget, evaluation settings and artifact hashes when adding new run archives. Keep the protocol identifier on each run. The comparison CLI records `algorithm`, `environment` and `protocol` in evaluation and metric rows. Evaluation records include the episode seed, return, transition count and episode boundary.
 
