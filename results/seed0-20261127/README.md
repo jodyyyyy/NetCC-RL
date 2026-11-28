@@ -1,6 +1,6 @@
 # Seed 0 results, 2026-11-27
 
-This snapshot contains 36 completed ablations and 23 completed baseline runs. The unified SIS CMAT run is pending. Its protocol uses the common SIS reward with a control-cost coefficient of 0.1 and action bounds of `[-1, 1]`.
+This snapshot contains 36 completed ablations and 24 completed baseline runs. The unified SIS CMAT run completed 1,000,000 training transitions and 500,010 optimizer updates. Its protocol uses the common SIS reward with a control-cost coefficient of 0.1 and action bounds of `[-1, 1]`.
 
 Each completed run used training seed 0 and 1,000,000 real environment transitions. Evaluation transitions are separate from that budget. All returns are cumulative episode rewards. Episode variation and the independent evaluation intervals describe fixed checkpoints trained once. Comparisons over training seeds require additional runs.
 
